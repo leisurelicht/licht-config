@@ -57,7 +57,9 @@ if [[ "${1}" == "all" || "${1}" == "tmux" ]]; then
 
 		if [[ -f "${config_path}/bak/tmux.conf.bak" ]]; then
 			echo "====> Move backup tmux config file"
-			mv "${config_path}/bak/tmux.conf.bak" ~/.tmux.conf
+			if [[ ! -f ~/.tmux.conf ]]; then
+				mv "${config_path}/bak/tmux.conf.bak" ~/.tmux.conf
+			fi
 		fi
 
 		echo "====> Delete tmux plugin"
@@ -88,7 +90,9 @@ if [[ "${1}" == "all" || "${1}" == "vim" ]]; then
 
 		if [[ -f "${config_path}/bak/vimrc.bak" ]]; then
 			echo '====> Move vimrc file back'
-			mv "${config_path}"/bak/vimrc.bak ~/.vimrc
+			if [[ ! -f ~/.vimrc ]]; then
+				mv "${config_path}"/bak/vimrc.bak ~/.vimrc
+			fi
 		fi
 
 		echo "====> Delete vim plugin"
@@ -114,7 +118,9 @@ if [[ "${1}" == "all" || "${1}" == "neovim" ]]; then
 
 		if [[ -d "${config_path}/bak/nvim_bak" ]]; then
 			echo '====> Move nvim folder back'
-			mv "${config_path}"/bak/nvim_bak ~/.config/nvim >/dev/null 2>&1
+			if [[ ! -d ~/.config/nvim ]]; then
+				mv "${config_path}"/bak/nvim_bak ~/.config/nvim >/dev/null 2>&1
+			fi
 		fi
 
 		echo "====> Delete neovim plugin"
@@ -140,14 +146,20 @@ if [[ "${1}" == "all" || "${1}" == "zsh" ]]; then
 
 		if [[ -f "${config_path}/bak/zshrc.bak" ]]; then
 			echo '====> Move zshrc file back'
-			mv "${config_path}/bak/zshrc.bak" ~/.zshrc
+			if [[ ! -f ~/.zshrc ]]; then
+				mv "${config_path}/bak/zshrc.bak" ~/.zshrc
+			fi
 		fi
 
 		echo "====> Remove P10k config"
-		rm ~/.p10k.zsh >/dev/null 2>&1
+		if [ -h ~/.p10k.zsh ]; then
+			rm ~/.p10k.zsh >/dev/null 2>&1
+		fi
 		if [[ -f "${config_path}/bak/p10k.zsh.bak" ]]; then
 			echo '====> Move P10k config file back'
-			mv "${config_path}/bak/p10k.zsh.bak" ~/.p10k.zsh
+			if [[ ! -f ~/.p10k.zsh ]]; then
+				mv "${config_path}/bak/p10k.zsh.bak" ~/.p10k.zsh
+			fi
 		fi
 
 		echo "====> Remove fzf plugin"

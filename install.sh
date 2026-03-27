@@ -383,8 +383,13 @@ if [[ ${zsh} == 1 ]]; then
 	ln -sf "${config_path}"/zsh/zshrc ~/.zshrc
 
 	echo "====> Change to zsh"
-	if ! chsh -s /bin/zsh; then
-		echo "====> Warning: Failed to change shell to zsh. You may need to do it manually."
+	current_shell=$(basename "$SHELL")
+	if [[ "${current_shell}" == "zsh" ]]; then
+		echo "====> Already using zsh, skipping."
+	else
+		if ! chsh -s /bin/zsh; then
+			echo "====> Warning: Failed to change shell to zsh. You may need to do it manually."
+		fi
 	fi
 	zsh -lc 'source ~/.zshrc'
 fi
