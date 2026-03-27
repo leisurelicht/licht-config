@@ -5,7 +5,6 @@ has() {
 }
 
 fzf_config_start="# Fzf Custom Config"
-fzf_config_end="# End Fzf Custom Config"
 
 brew_has() {
 	brew list --formula -1 "$1" >/dev/null 2>&1
@@ -37,7 +36,9 @@ install_on_mac() {
 		if ! brew tap | grep -q "homebrew/cask-fonts"; then
 			brew tap homebrew/cask-fonts
 		fi
-		brew install --cask font-hack-nerd-font
+		if ! brew list --cask 2>/dev/null | grep -q "font-hack-nerd-font"; then
+			brew install --cask font-hack-nerd-font
+		fi
 
 		if [[ ! -e "${HOME}/.fzf.zsh" ]]; then
 			"$(brew --prefix fzf)"/install
@@ -235,9 +236,7 @@ fi
 if [[ ${tmux} == 1 ]]; then
 	echo "====> Install tmux plugins manage plugin tpm"
 	if [ ! -d ~/.tmux/plugins/tpm ]; then
-		git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-
-		if [ $? -ne 0 ]; then
+		if ! git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm; then
 			rm -r ~/.tmux/plugins/tpm >/dev/null 2>&1
 			echo "====> Error: Download tpm failed, install stop"
 			exit 1
@@ -246,9 +245,13 @@ if [[ ${tmux} == 1 ]]; then
 		fi
 	fi
 
-	if [ -f ~/.tmux.conf ]; then
-		echo "====> Tmux config file [tmux.conf] is exist, backup and delete it."
-		mv ~/.tmux.conf "${config_path}/bak/tmux.conf.bak"
+	if [[ -f ~/.tmux.conf ]]; then
+		if [[ -L ~/.tmux.conf && "$(readlink ~/.tmux.conf)" == "${config_path}/tmux/tmux.conf" ]]; then
+			echo "====> Tmux config symlink already exists and points to correct location."
+		else
+			echo "====> Tmux config file [tmux.conf] is exist, backup and delete it."
+			mv ~/.tmux.conf "${config_path}/bak/tmux.conf.bak"
+		fi
 	fi
 
 	echo "====> Create symlink for tmux config"
@@ -258,9 +261,13 @@ fi
 if [[ ${vim} == 1 ]]; then
 	# 安装 vim 配置文件
 	if [ -f "${HOME}/.vimrc" ]; then
-		echo "====> Vim config file the vimrc has exist"
-		echo "====> Backup to [ ${config_path}/bak ] and delete it."
-		mv "${HOME}/.vimrc" "${config_path}/bak/vimrc.bak"
+		if [[ -L "${HOME}/.vimrc" && "$(readlink "${HOME}/.vimrc")" == "${config_path}/vi/vim/vimrc" ]]; then
+			echo "====> Vim config symlink already exists and points to correct location."
+		else
+			echo "====> Vim config file the vimrc has exist"
+			echo "====> Backup to [ ${config_path}/bak ] and delete it."
+			mv "${HOME}/.vimrc" "${config_path}/bak/vimrc.bak"
+		fi
 	fi
 
 	echo "====> Create symlink for vim config"
@@ -275,8 +282,12 @@ if [[ ${neovim} == 1 ]]; then
 	# 安装 neovim 配置文件
 	if [ -d "${HOME}/.config/nvim" ]; then
 		if [ -h "${HOME}/.config/nvim" ]; then
-			echo "====> Neovim config dir is a link file, only delete it."
-			rm -r "${HOME}/.config/nvim"
+			if [[ "$(readlink "${HOME}/.config/nvim")" == "${config_path}/vi/nvim" ]]; then
+				echo "====> Neovim config symlink already exists and points to correct location."
+			else
+				echo "====> Neovim config dir is a link file, only delete it."
+				rm -r "${HOME}/.config/nvim"
+			fi
 		else
 			echo "====> Neovim config dir the nvim has exist"
 			echo "====> Backup to [ ${config_path}/bak ] and delete it."
@@ -346,18 +357,26 @@ if [[ ${zsh} == 1 ]]; then
 
 	# 备份已有的p10k.zsh文件
 	if [[ -f "${HOME}/.p10k.zsh" ]]; then
-		echo "====> P10k config file .p10k.zsh is exist."
-		echo "====> Backup to [ ${config_path}/bak ] and delete it."
-		mv "${HOME}/.p10k.zsh" "${config_path}"/bak/p10k.zsh.bak
+		if [[ -L "${HOME}/.p10k.zsh" && "$(readlink "${HOME}/.p10k.zsh")" == "${config_path}/zsh/p10k.zsh" ]]; then
+			echo "====> P10k config symlink already exists and points to correct location."
+		else
+			echo "====> P10k config file .p10k.zsh is exist."
+			echo "====> Backup to [ ${config_path}/bak ] and delete it."
+			mv "${HOME}/.p10k.zsh" "${config_path}"/bak/p10k.zsh.bak
+		fi
 	fi
 
 	echo "====> Create symlink for p10k config"
 	ln -sf "${config_path}"/zsh/p10k.zsh ~/.p10k.zsh
 
 	if [[ -f "${HOME}/.zshrc" ]]; then
-		echo "====> Zsh config file the [ zshrc ] has exist."
-		echo "====> Backup to [ ${config_path}/bak ] and delete it."
-		mv "${HOME}/.zshrc" "${config_path}/bak/zshrc.bak"
+		if [[ -L "${HOME}/.zshrc" && "$(readlink "${HOME}/.zshrc")" == "${config_path}/zsh/zshrc" ]]; then
+			echo "====> Zsh config symlink already exists and points to correct location."
+		else
+			echo "====> Zsh config file the [ zshrc ] has exist."
+			echo "====> Backup to [ ${config_path}/bak ] and delete it."
+			mv "${HOME}/.zshrc" "${config_path}/bak/zshrc.bak"
+		fi
 	fi
 
 	echo "====> Create symlink for zsh config"
