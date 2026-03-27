@@ -7,13 +7,15 @@
 if [[ $(uname -s) == "Darwin" ]]; then
     if command -v brew >/dev/null 2>&1; then
         FZF_BREW_PREFIX="$(brew --prefix 2>/dev/null)"
-        FZF_INTERACTIVE_CD_DIR="${FZF_BREW_PREFIX}/opt/fzf/shell/zsh-interactive-cd"
-        if [ ! -d "${FZF_INTERACTIVE_CD_DIR}" ]; then
-            git clone --depth 1 https://github.com/changyuheng/zsh-interactive-cd \
-                "${FZF_INTERACTIVE_CD_DIR}"
-        fi
-        if [ -f "${FZF_INTERACTIVE_CD_DIR}/zsh-interactive-cd.plugin.zsh" ]; then
-            source "${FZF_INTERACTIVE_CD_DIR}/zsh-interactive-cd.plugin.zsh"
+        if [[ -n "${FZF_BREW_PREFIX}" ]]; then
+            FZF_INTERACTIVE_CD_DIR="${FZF_BREW_PREFIX}/opt/fzf/shell/zsh-interactive-cd"
+            if [ ! -d "${FZF_INTERACTIVE_CD_DIR}" ]; then
+                git clone --depth 1 https://github.com/changyuheng/zsh-interactive-cd \
+                    "${FZF_INTERACTIVE_CD_DIR}"
+            fi
+            if [ -f "${FZF_INTERACTIVE_CD_DIR}/zsh-interactive-cd.plugin.zsh" ]; then
+                source "${FZF_INTERACTIVE_CD_DIR}/zsh-interactive-cd.plugin.zsh"
+            fi
         fi
     fi
 fi
