@@ -73,12 +73,13 @@ export PATH="$HOME/.local/bin/:$PATH"
 unalias g 2> /dev/null
 if [ -f "${HOME}/.g/env" ]; then
     . "${HOME}/.g/env"
+    export GOROOT="${HOME}/.g/go"
+    export GOPATH="${HOME}/.g/path"
+    export PATH="${HOME}/.g/bin:${HOME}/.g/go/bin:${HOME}/.g/path/bin:$PATH"
+    # gvm alias for .g (Go version manager)
+    alias gvm="$HOME/.g/bin/g"
 fi
-export GOROOT="${HOME}/.g/go"
-export GOPATH="${HOME}/.g/path"
-export PATH="${HOME}/.g/bin:${HOME}/.g/go/bin:${HOME}/.g/path/bin:$PATH"
 export G_MIRROR=https://golang.google.cn/dl/
-
 export GO111MODULE=on
 export GOPROXY=https://goproxy.cn,direct
 
@@ -107,3 +108,12 @@ fi
 
 [[ ":$PATH:" != *":$HOME/.config/kaku/zsh/bin:"* ]] && export PATH="$HOME/.config/kaku/zsh/bin:$PATH" # Kaku PATH Integration
 [[ -f "$HOME/.config/kaku/zsh/kaku.zsh" ]] && source "$HOME/.config/kaku/zsh/kaku.zsh" # Kaku Shell Integration
+
+# bun completions
+[ -s "/Users/Licht/.bun/_bun" ] && source "/Users/Licht/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+
