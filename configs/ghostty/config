@@ -8,18 +8,24 @@ adjust-cell-height = 2
 theme = light:Catppuccin Mocha,dark:Catppuccin Mocha
 
 # 窗口
+macos-titlebar-style = tabs
+macos-option-as-alt = left
 background-opacity = 0.9
 background-blur-radius = 20
-macos-titlebar-style = transparent
 window-padding-x = 10
 window-padding-y = 8
 window-save-state = always
 window-theme = auto
+confirm-close-surface = false
 
 # 光标
 cursor-style = bar
 cursor-style-blink = true
 cursor-opacity = 0.8
+
+# 下划线微调
+adjust-underline-position = 2
+adjust-underline-thickness = 1
 
 # 鼠标
 mouse-hide-while-typing = true
@@ -46,8 +52,10 @@ shell-integration = detect
 # 快捷键
 # 标签页
 keybind = cmd+t=new_tab
-keybind = cmd+shift+left=previous_tab
-keybind = cmd+shift+right=next_tab
+keybind = cmd+shift+h=previous_tab
+keybind = cmd+shift+l=next_tab
+keybind = cmd+shift+comma=move_tab:-1
+keybind = cmd+shift+period=move_tab:1
 keybind = cmd+w=close_surface
 
 # 分屏
@@ -63,6 +71,9 @@ keybind = cmd+ctrl+h=resize_split:left,10
 keybind = cmd+ctrl+l=resize_split:right,10
 keybind = cmd+ctrl+k=resize_split:up,5
 keybind = cmd+ctrl+j=resize_split:down,5
+
+# 分屏缩放切换
+keybind = ctrl+shift+space=toggle_split_zoom
 
 # 全局热键：下拉终端
 keybind = global:ctrl+grave_accent=toggle_quick_terminal
