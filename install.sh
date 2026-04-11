@@ -356,7 +356,7 @@ if [[ "${primary}" == "apps" ]]; then
 	brew|all)
 		if [[ -z "${3:-}" ]]; then
 			print_usage
-			exit 0
+			exit 1
 		fi
 		install_apps "${secondary}" "${3}"
 		;;

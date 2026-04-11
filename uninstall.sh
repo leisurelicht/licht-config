@@ -205,8 +205,12 @@ fi
 
 case "${primary}" in
 all)
-	uninstall_apps "brew" "all"
-	uninstall_apps "claude"
+	if has brew; then
+		uninstall_apps "brew" "all"
+		uninstall_apps "claude"
+	else
+		echo "====> Warning: [ brew ] is not installed, skip apps uninstall."
+	fi
 	set -- all
 	;;
 configs)
