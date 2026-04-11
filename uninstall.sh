@@ -17,8 +17,16 @@ print_usage() {
 	cat <<'EOF'
 Usage:
   ./uninstall.sh all
-  ./uninstall.sh configs [all|zsh|tmux|vim|neovim|ghostty]
-  ./uninstall.sh apps [brew|claude] [all|formula|cask]
+  ./uninstall.sh configs <all|zsh|tmux|vim|neovim|ghostty>
+  ./uninstall.sh apps <brew|claude> <brew_mode>
+
+Options:
+  brew_mode: all | formula | cask
+
+Examples:
+  ./uninstall.sh configs zsh
+  ./uninstall.sh apps brew cask
+  ./uninstall.sh apps claude all
 EOF
 }
 

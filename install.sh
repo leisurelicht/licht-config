@@ -270,22 +270,35 @@ config_path=$(
 	pwd
 )
 
-echo "====> Config file root path is: ${config_path}"
+root_logged=0
+log_root_path_once() {
+	if [[ ${root_logged} -eq 0 ]]; then
+		echo "====> Config file root path is: ${config_path}"
+		root_logged=1
+	fi
+}
 
 print_usage() {
 	cat <<'EOF'
 Usage:
-  ./install.sh all [brew_mode]
-    brew_mode: all|formula|cask
+  ./install.sh all
+  ./install.sh apps <brew|claude|all> <brew_mode>
+  ./install.sh configs <all|zsh|tmux|vim|neovim|ghostty>
 
-  ./install.sh apps [all|brew|claude] [brew_mode]
-    brew_mode: all|formula|cask (default: all)
+Options:
+  brew_mode: all | formula | cask
 
-  ./install.sh configs [all|zsh|tmux|vim|neovim|ghostty]
+Examples:
+  ./install.sh configs zsh
+  ./install.sh apps brew formula
+  ./install.sh apps claude
+  ./install.sh all
 EOF
 }
 
 install_apps() {
+	log_root_path_once
+
 	local app=${1:-all}
 	local brew_mode=${2:-all}
 
@@ -317,12 +330,12 @@ if [[ -z "${primary}" ]]; then
 fi
 
 if [[ "${primary}" == "all" ]]; then
-	if [[ -z "${secondary}" ]]; then
+	if [[ -n "${secondary}" ]]; then
 		print_usage
-		exit 0
+		exit 1
 	fi
 
-	install_apps "brew" "${secondary}"
+	install_apps "brew" "all"
 	install_apps "claude"
 
 	# continue with configs all
@@ -406,8 +419,10 @@ ghostty)
 esac
 
 if [[ $(uname -s) == 'Darwin' ]]; then
+	log_root_path_once
 	install_on_mac
 elif [[ $(uname -s) == 'Linux' ]]; then
+	log_root_path_once
 	install_on_linux
 fi
 
