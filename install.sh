@@ -396,47 +396,38 @@ log_root_path_once() {
 print_usage() {
 	cat <<'EOF'
 Usage:
+  ./install.sh [--dry-run] --apps <brew|all|claude> [args...]
+      Install apps.
+
+  ./install.sh [--dry-run] --conf <all|zsh|tmux|vim|neovim|ghostty>
+      Install config symlinks + related setup.
+
   ./install.sh [--dry-run] all
       Install all apps + all configs.
 
-  ./install.sh [--dry-run] apps brew <brew_mode>
+  ./install.sh [--dry-run] --apps brew <brew_mode>
       Install Homebrew formulae/casks from `apps/brew.sh`.
 
-  ./install.sh [--dry-run] apps all
+  ./install.sh [--dry-run] --apps all
       Install all scripts under `apps/`.
 
-  ./install.sh [--dry-run] apps claude
+  ./install.sh [--dry-run] --apps claude
       Install Claude-related tooling from `apps/for_claude.sh`.
 
-  ./install.sh [--dry-run] conf <all|zsh|tmux|vim|neovim|ghostty>
+  ./install.sh [--dry-run] --conf <all|zsh|tmux|vim|neovim|ghostty>
       Install config symlinks + related setup.
 
 Options:
   --dry-run         Print actions without changing files.
+  -h, --help        Show this help.
 
-Compatibility:
-  ./install.sh all
-      Install all apps + all configs.
-
-  ./install.sh apps brew <brew_mode>
-      Install Homebrew formulae/casks from `apps/brew.sh`.
-
-  ./install.sh apps all
-      Install all scripts under `apps/`.
-
-  ./install.sh apps claude
-      Install Claude-related tooling from `apps/for_claude.sh`.
-
-  ./install.sh conf <all|zsh|tmux|vim|neovim|ghostty>
-      Install config symlinks + related setup.
-
-Options:
+Arguments:
   brew_mode  all | formula | cask
 
 Examples:
-  ./install.sh conf zsh
-  ./install.sh apps brew formula
-  ./install.sh apps claude
+  ./install.sh --conf zsh
+  ./install.sh --apps brew formula
+  ./install.sh --apps claude
   ./install.sh all
 EOF
 }
@@ -448,6 +439,13 @@ parse_flags() {
 
 	for arg in "$@"; do
 		case "${arg}" in
+		-h|--help)
+			print_usage
+			exit 0
+			;;
+		--apps|--conf)
+			positional+=("${arg}")
+			;;
 		--dry-run)
 			DRY_RUN=1
 			has_any_flag=1
@@ -499,10 +497,36 @@ install_apps() {
 parse_flags "$@"
 set -- "${ARGS[@]}"
 
+orig_primary=${1:-}
 primary=${1:-}
 secondary=${2:-}
 
 if [[ -z "${primary}" ]]; then
+	print_usage
+	exit 1
+fi
+
+if [[ "${primary}" == "--apps" ]]; then
+	shift
+	primary="apps"
+	secondary=${1:-}
+	set -- "apps" "$@"
+elif [[ "${primary}" == "--conf" ]]; then
+	shift
+	primary="conf"
+	secondary=${1:-}
+	set -- "conf" "$@"
+fi
+
+if [[ "${orig_primary}" == "apps" ]]; then
+	# legacy positional form: ./install.sh apps ...
+	print_error_banner "ERROR: Use --apps (legacy 'apps' is not supported)"
+	print_usage
+	exit 1
+fi
+if [[ "${orig_primary}" == "conf" ]]; then
+	# legacy positional form: ./install.sh conf ...
+	print_error_banner "ERROR: Use --conf (legacy 'conf' is not supported)"
 	print_usage
 	exit 1
 fi

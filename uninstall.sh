@@ -27,25 +27,32 @@ config_path=$(
 print_usage() {
 	cat <<'EOF'
 Usage:
+  ./uninstall.sh --apps <brew|claude> [args...]
+      Uninstall apps.
+
+  ./uninstall.sh --conf <all|zsh|tmux|vim|neovim|ghostty>
+      Remove managed symlinks and restore backups.
+
   ./uninstall.sh all
       Uninstall all apps (if `brew` exists) + all configs.
 
-  ./uninstall.sh conf <all|zsh|tmux|vim|neovim|ghostty>
+  ./uninstall.sh --conf <all|zsh|tmux|vim|neovim|ghostty>
       Remove managed symlinks and restore backups.
 
-  ./uninstall.sh apps brew <brew_mode>
+  ./uninstall.sh --apps brew <brew_mode>
       Uninstall Homebrew formulae/casks listed in `apps/brew.sh`.
 
-  ./uninstall.sh apps claude
+  ./uninstall.sh --apps claude
       Uninstall `dippy` and untap `ldayton/dippy`.
 
 Options:
   brew_mode  all | formula | cask
+  -h, --help  Show this help.
 
 Examples:
-  ./uninstall.sh conf zsh
-  ./uninstall.sh apps brew cask
-  ./uninstall.sh apps claude
+  ./uninstall.sh --conf zsh
+  ./uninstall.sh --apps brew cask
+  ./uninstall.sh --apps claude
 EOF
 }
 
@@ -59,6 +66,13 @@ parse_flags() {
 
 	for arg in "$@"; do
 		case "${arg}" in
+		-h|--help)
+			print_usage
+			exit 0
+			;;
+		--apps|--conf)
+			positional+=("${arg}")
+			;;
 		--*)
 			print_error_banner "ERROR: Unknown option: ${arg}"
 			print_usage
@@ -234,16 +248,37 @@ move_path() {
 	fi
 }
 
-primary=${1:-}
-secondary=${2:-}
-
 parse_flags "$@"
 set -- "${ARGS[@]}"
 
+orig_primary=${1:-}
 primary=${1:-}
 secondary=${2:-}
 
 if [[ -z "${primary}" ]]; then
+	print_usage
+	exit 1
+fi
+
+if [[ "${primary}" == "--apps" ]]; then
+	shift
+	primary="apps"
+	secondary=${1:-}
+	set -- "apps" "$@"
+elif [[ "${primary}" == "--conf" ]]; then
+	shift
+	primary="conf"
+	secondary=${1:-}
+	set -- "conf" "$@"
+fi
+
+if [[ "${orig_primary}" == "apps" ]]; then
+	print_error_banner "ERROR: Use --apps (legacy 'apps' is not supported)"
+	print_usage
+	exit 1
+fi
+if [[ "${orig_primary}" == "conf" ]]; then
+	print_error_banner "ERROR: Use --conf (legacy 'conf' is not supported)"
 	print_usage
 	exit 1
 fi

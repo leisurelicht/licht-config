@@ -37,11 +37,11 @@ This repo is primarily a symlink-based config installer:
 
 ```bash
 ./install.sh all [all|formula|cask]
-./install.sh apps [all|brew|claude] [all|formula|cask]
-./install.sh conf [all|zsh|tmux|vim|neovim|ghostty]
+./install.sh --apps [all|brew|claude] [all|formula|cask]
+./install.sh --conf [all|zsh|tmux|vim|neovim|ghostty]
 ./uninstall.sh all
-./uninstall.sh apps [brew|claude] [all|formula|cask]
-./uninstall.sh conf [all|zsh|tmux|vim|neovim|ghostty]
+./uninstall.sh --apps [brew|claude] [all|formula|cask]
+./uninstall.sh --conf [all|zsh|tmux|vim|neovim|ghostty]
 ```
 
 ### Helper scripts

@@ -64,10 +64,10 @@ cd .licht-config
 git submodule update --init --recursive
 
 # install one config
-./install.sh conf zsh
+./install.sh --conf zsh
 
 # or install brew packages/apps from this repo
-./install.sh apps brew all
+./install.sh --apps brew all
 ```
 
 ## Usage
@@ -87,7 +87,7 @@ git submodule update --init --recursive
 - install
 
   ```bash
-  ./install.sh conf zsh
+  ./install.sh --conf zsh
   ```
 
   - change terminal font to Hack Nerd Font
@@ -98,7 +98,7 @@ git submodule update --init --recursive
 - uninstall
 
   ```bash
-  ./uninstall.sh zsh
+  ./uninstall.sh --conf zsh
   ```
 
 #### File structure
@@ -127,7 +127,7 @@ git submodule update --init --recursive
   1. run install script
 
   ```bash
-  ./install.sh conf tmux
+  ./install.sh --conf tmux
   ```
 
   2. run tmux and install tmux plugins
@@ -147,7 +147,7 @@ git submodule update --init --recursive
 - uninstall
 
   ```bash
-  ./uninstall.sh tmux
+  ./uninstall.sh --conf tmux
   ```
 
 #### File structure
@@ -243,8 +243,8 @@ git submodule update --init --recursive
 - ghostty
 
   ```bash
-  ./install.sh conf ghostty
-  ./uninstall.sh ghostty
+  ./install.sh --conf ghostty
+  ./uninstall.sh --conf ghostty
   ```
 
 #### File structure
