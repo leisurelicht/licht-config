@@ -282,16 +282,25 @@ print_usage() {
 	cat <<'EOF'
 Usage:
   ./install.sh all
+      Install all apps + all configs.
+
   ./install.sh apps brew <brew_mode>
-  ./install.sh apps all <brew_mode>
+      Install Homebrew formulae/casks from `apps/brew.sh`.
+
+  ./install.sh apps all
+      Install all scripts under `apps/`.
+
   ./install.sh apps claude
-  ./install.sh configs <all|zsh|tmux|vim|neovim|ghostty>
+      Install Claude-related tooling from `apps/for_claude.sh`.
+
+  ./install.sh conf <all|zsh|tmux|vim|neovim|ghostty>
+      Install config symlinks + related setup.
 
 Options:
-  brew_mode: all | formula | cask
+  brew_mode  all | formula | cask
 
 Examples:
-  ./install.sh configs zsh
+  ./install.sh conf zsh
   ./install.sh apps brew formula
   ./install.sh apps claude
   ./install.sh all
@@ -340,8 +349,8 @@ if [[ "${primary}" == "all" ]]; then
 	install_apps "brew" "all"
 	install_apps "claude"
 
-	# continue with configs all
-	set -- configs all
+	# continue with conf all
+	set -- conf all
 	primary=${1}
 	secondary=${2}
 fi
@@ -353,12 +362,19 @@ if [[ "${primary}" == "apps" ]]; then
 	fi
 
 	case "${secondary}" in
-	brew|all)
+	brew)
 		if [[ -z "${3:-}" ]]; then
 			print_usage
 			exit 1
 		fi
-		install_apps "${secondary}" "${3}"
+		install_apps "brew" "${3}"
+		;;
+	all)
+		if [[ -n "${3:-}" ]]; then
+			print_usage
+			exit 1
+		fi
+		install_apps "all" "all"
 		;;
 	claude)
 		install_apps "${secondary}"
@@ -370,7 +386,7 @@ if [[ "${primary}" == "apps" ]]; then
 	exit 0
 fi
 
-if [[ "${primary}" == "configs" ]]; then
+if [[ "${primary}" == "conf" ]]; then
 	if [[ -z "${secondary}" ]]; then
 		print_usage
 		exit 0

@@ -17,15 +17,22 @@ print_usage() {
 	cat <<'EOF'
 Usage:
   ./uninstall.sh all
-  ./uninstall.sh configs <all|zsh|tmux|vim|neovim|ghostty>
+      Uninstall all apps (if `brew` exists) + all configs.
+
+  ./uninstall.sh conf <all|zsh|tmux|vim|neovim|ghostty>
+      Remove managed symlinks and restore backups.
+
   ./uninstall.sh apps brew <brew_mode>
+      Uninstall Homebrew formulae/casks listed in `apps/brew.sh`.
+
   ./uninstall.sh apps claude
+      Uninstall `dippy` and untap `ldayton/dippy`.
 
 Options:
-  brew_mode: all | formula | cask
+  brew_mode  all | formula | cask
 
 Examples:
-  ./uninstall.sh configs zsh
+  ./uninstall.sh conf zsh
   ./uninstall.sh apps brew cask
   ./uninstall.sh apps claude
 EOF
@@ -203,20 +210,20 @@ if [[ -z "${primary}" ]]; then
 	exit 1
 fi
 
-case "${primary}" in
-all)
-	if has brew; then
-		uninstall_apps "brew" "all"
+	case "${primary}" in
+	all)
+		if has brew; then
+			uninstall_apps "brew" "all"
 		uninstall_apps "claude"
 	else
 		echo "====> Warning: [ brew ] is not installed, skip apps uninstall."
 	fi
-	set -- all
-	;;
-configs)
-	if [[ -z "${secondary}" ]]; then
-		print_usage
-		exit 0
+		set -- all
+		;;
+	conf)
+		if [[ -z "${secondary}" ]]; then
+			print_usage
+			exit 0
 	fi
 	set -- "${secondary}"
 	;;
