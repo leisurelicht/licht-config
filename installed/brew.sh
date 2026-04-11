@@ -34,6 +34,7 @@ casks=(
 	"iterm2"
 	"devtoys"
 	"cursor"
+	"codeisland"
 	"masscode"
 )
 
