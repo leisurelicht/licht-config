@@ -5,8 +5,6 @@ has() {
 }
 
 DRY_RUN=0
-NO_PLUGINS=0
-NO_SHELL_CHANGE=0
 
 run_cmd() {
 	if [[ ${DRY_RUN} -eq 1 ]]; then
@@ -19,6 +17,17 @@ run_cmd() {
 fail() {
 	echo "====> Error: $1"
 	exit 1
+}
+
+print_error_banner() {
+	local message=$1
+	local width=60
+	local line
+
+	line=$(printf '%*s' "${width}" '' | tr ' ' '=')
+	printf '%s\n' "${line}" >&2
+	printf '%*s\n' "$(((${width} + ${#message}) / 2))" "${message}" >&2
+	printf '%s\n\n' "${line}" >&2
 }
 
 fzf_config_start="# Fzf Custom Config"
@@ -387,25 +396,23 @@ log_root_path_once() {
 print_usage() {
 	cat <<'EOF'
 Usage:
-  ./install.sh [--dry-run] [--no-plugins] [--no-shell-change] all
+  ./install.sh [--dry-run] all
       Install all apps + all configs.
 
-  ./install.sh [--dry-run] [--no-plugins] [--no-shell-change] apps brew <brew_mode>
+  ./install.sh [--dry-run] apps brew <brew_mode>
       Install Homebrew formulae/casks from `apps/brew.sh`.
 
-  ./install.sh [--dry-run] [--no-plugins] [--no-shell-change] apps all
+  ./install.sh [--dry-run] apps all
       Install all scripts under `apps/`.
 
-  ./install.sh [--dry-run] [--no-plugins] [--no-shell-change] apps claude
+  ./install.sh [--dry-run] apps claude
       Install Claude-related tooling from `apps/for_claude.sh`.
 
-  ./install.sh [--dry-run] [--no-plugins] [--no-shell-change] conf <all|zsh|tmux|vim|neovim|ghostty>
+  ./install.sh [--dry-run] conf <all|zsh|tmux|vim|neovim|ghostty>
       Install config symlinks + related setup.
 
 Options:
   --dry-run         Print actions without changing files.
-  --no-plugins      Skip tmux/vim/nvim plugin installation steps.
-  --no-shell-change Skip `chsh` and `zsh -lc 'source ~/.zshrc'`.
 
 Compatibility:
   ./install.sh all
@@ -437,20 +444,16 @@ EOF
 parse_flags() {
 	local arg
 	local positional=()
+	local has_any_flag=0
 
 	for arg in "$@"; do
 		case "${arg}" in
 		--dry-run)
 			DRY_RUN=1
-			;;
-		--no-plugins)
-			NO_PLUGINS=1
-			;;
-		--no-shell-change)
-			NO_SHELL_CHANGE=1
+			has_any_flag=1
 			;;
 		--*)
-			echo "====> Error: Unknown option: ${arg}"
+			print_error_banner "ERROR: Unknown option: ${arg}"
 			print_usage
 			exit 1
 			;;
@@ -461,7 +464,9 @@ parse_flags() {
 	done
 
 	set -- "${positional[@]}"
-	echo "====> Options: DRY_RUN=${DRY_RUN} NO_PLUGINS=${NO_PLUGINS} NO_SHELL_CHANGE=${NO_SHELL_CHANGE}"
+	if [[ ${has_any_flag} -eq 1 ]]; then
+		echo "====> Options: DRY_RUN=${DRY_RUN}"
+	fi
 	# shellcheck disable=SC2124
 	ARGS=("$@")
 }
@@ -614,26 +619,22 @@ ensure_dir_exists "${config_path}/backups"
 if [[ ${tmux} == 1 ]]; then
 	echo "====> Install tmux plugins manage plugin tpm"
 	if [ ! -d ~/.tmux/plugins/tpm ]; then
-		if [[ ${NO_PLUGINS} -eq 1 ]]; then
-			echo "====> Skip tmux plugin install (NO_PLUGINS=1)"
-		else
-			tpm_created=0
-			if ! run_cmd mkdir -p ~/.tmux/plugins; then
-				echo "====> Error: Failed to create ~/.tmux/plugins"
-				exit 1
-			fi
-			if [[ ! -e ~/.tmux/plugins/tpm && ! -L ~/.tmux/plugins/tpm ]]; then
-				tpm_created=1
-			fi
-			if ! run_cmd git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm; then
-				if [[ ${tpm_created} -eq 1 ]]; then
-					run_cmd rm -rf ~/.tmux/plugins/tpm >/dev/null 2>&1 || true
-				fi
-				echo "====> Error: Download tpm failed, install stop"
-				exit 1
-			fi
-			echo "====> Download tpm Succeed"
+		tpm_created=0
+		if ! run_cmd mkdir -p ~/.tmux/plugins; then
+			echo "====> Error: Failed to create ~/.tmux/plugins"
+			exit 1
 		fi
+		if [[ ! -e ~/.tmux/plugins/tpm && ! -L ~/.tmux/plugins/tpm ]]; then
+			tpm_created=1
+		fi
+		if ! run_cmd git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm; then
+			if [[ ${tpm_created} -eq 1 ]]; then
+				run_cmd rm -rf ~/.tmux/plugins/tpm >/dev/null 2>&1 || true
+			fi
+			echo "====> Error: Download tpm failed, install stop"
+			exit 1
+		fi
+		echo "====> Download tpm Succeed"
 	fi
 
 	ensure_file_symlink \
@@ -656,9 +657,7 @@ if [[ ${vim} == 1 ]]; then
 
 	# 安装vim插件
 	echo "====> Install vim plugins"
-	if [[ ${NO_PLUGINS} -eq 1 ]]; then
-		echo "====> Skip vim plugin install (NO_PLUGINS=1)"
-	elif has vim; then
+	if has vim; then
 		run_cmd vim +PlugInstall +UpdateRemotePlugins +qa
 	else
 		echo "====> Warning: vim not found, skip plugin install."
@@ -676,9 +675,7 @@ if [[ ${neovim} == 1 ]]; then
 
 	# 安装neovim插件
 	echo "====> Install nvim plugins"
-	if [[ ${NO_PLUGINS} -eq 1 ]]; then
-		echo "====> Skip nvim plugin install (NO_PLUGINS=1)"
-	elif has nvim; then
+	if has nvim; then
 		run_cmd nvim +Lazy +qa
 	else
 		echo "====> Warning: nvim not found, skip plugin install."
@@ -764,19 +761,11 @@ fi
 	if [[ "${current_shell}" == "zsh" ]]; then
 		echo "====> Already using zsh, skipping."
 	else
-		if [[ ${NO_SHELL_CHANGE} -eq 1 ]]; then
-			echo "====> Skip shell change (NO_SHELL_CHANGE=1)"
-		else
-			if ! run_cmd chsh -s /bin/zsh; then
-				echo "====> Warning: Failed to change shell to zsh. You may need to do it manually."
-			fi
+		if ! run_cmd chsh -s /bin/zsh; then
+			echo "====> Warning: Failed to change shell to zsh. You may need to do it manually."
 		fi
 	fi
-	if [[ ${NO_SHELL_CHANGE} -eq 1 ]]; then
-		echo "====> Skip sourcing zshrc (NO_SHELL_CHANGE=1)"
-	else
-		run_cmd zsh -lc 'source ~/.zshrc'
-	fi
+	run_cmd zsh -lc 'source ~/.zshrc'
 fi
 
 if [[ ${ghostty} == 1 ]]; then
