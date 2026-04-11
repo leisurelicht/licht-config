@@ -2,123 +2,190 @@
 
 ## Project Overview
 
-Personal dotfiles repository for managing shell, editor, and terminal configurations across macOS and Linux systems.
+Personal dotfiles repository for managing shell, terminal, editor, and app configuration across macOS and Linux systems.
 
-## Directory Structure
+This repo is primarily a symlink-based config installer:
+- source files live in `configs/`
+- helper scripts live in `apps/`
+- user files are linked into `$HOME`
+- previous user files are moved into `backups/`
 
-```
+## Current Layout
+
+```text
 .
-├── install.sh          # Main installation script
-├── uninstall.sh        # Uninstallation script
-├── apps/               # Helper install scripts
-│   ├── brew.sh         # Brew formula/cask installer
-│   └── for_claude.sh   # Claude-related setup
-├── configs/            # Dotfile configurations
-│   ├── zsh/            # Zsh configuration
-│   │   ├── zshrc       # Main zsh config (sourced via symlink)
-│   │   ├── aliasrc     # Aliases and functions
-│   │   ├── export_env  # Environment variables (private)
-│   │   ├── fzf.zsh     # FZF custom config
-│   │   └── p10k.zsh    # Powerlevel10k theme config
-│   ├── tmux/           # Tmux configuration
-│   │   ├── tmux.conf   # Main tmux config
-│   │   └── mini.conf   # Minimal config for quick setup
-│   ├── vi/             # Vim/Neovim configuration
-│   │   ├── vim/vimrc   # Vim config
-│   │   └── nvim/       # Neovim config (git submodule)
-│   └── ghostty/        # Ghostty configuration
-└── backups/            # Backup directory (gitignored)
+├── install.sh
+├── uninstall.sh
+├── apps/
+│   ├── brew.sh
+│   └── for_claude.sh
+├── configs/
+│   ├── ghostty/
+│   ├── tmux/
+│   ├── vi/
+│   │   ├── vim/
+│   │   └── nvim/      # git submodule
+│   └── zsh/
+├── backups/
+├── README.md
+└── .gitmodules
 ```
 
 ## Commands
 
-### Installation
+### Main entry points
 
 ```bash
 ./install.sh [all|zsh|tmux|vim|neovim|ghostty]
-```
-
-### Uninstallation
-
-```bash
 ./uninstall.sh [all|zsh|tmux|vim|neovim|ghostty]
 ```
 
-### Linting
+### Helper scripts
 
 ```bash
-# Shell scripts
-shellcheck install.sh uninstall.sh apps/*.sh
+./apps/brew.sh
+./apps/for_claude.sh
+```
 
-# Shell format (if shfmt installed)
+### Validation
+
+```bash
+bash -n install.sh
+bash -n uninstall.sh
+
+# Optional, if installed
+shellcheck install.sh uninstall.sh apps/*.sh
 shfmt -d install.sh uninstall.sh apps/*.sh
 ```
 
-### Prerequisites
+### Submodule setup
 
-- [shellcheck](https://github.com/koalaman/shellcheck) for linting
-- [shfmt](https://github.com/mvdan/sh) for formatting
-
-## Code Style
-
-### Shell Scripts
-
-- Indentation: Tabs
-- Shebang: `#!/bin/bash` or `#!/usr/bin/env bash`
-- Error handling: Check command exit codes
-- Follow Google Shell Style Guide principles
-
-### Vim Configuration
-
-- Indentation: 2 spaces
-- Use augroups for autocommands
-- Plugins managed via vim-plug
-
-### Tmux Configuration
-
-- Use vi mode keys
-- Custom status line with Catppuccin colors
-
-### Zsh Configuration
-
-- Plugins managed via zinit
-- Aliases in separate file (aliasrc)
-- Private env vars in export_env (not committed)
-
-## Commit Convention
-
-Format: `type: description`
-
-Types:
-- `fix`: Bug fixes, corrections
-- `feat`: New features
-- `docs`: Documentation changes
-- `refactor`: Code refactoring
-- `chore`: Maintenance tasks
-
-Examples:
-```
-fix: correct fzf installation path
-feat: add docker cleanup aliases
-docs: update README installation instructions
+```bash
+git submodule update --init --recursive
 ```
 
-## Important Notes
+## Source To Target Mapping
 
-1. **Neovim config** (`configs/vi/nvim`) is a git submodule pointing to a separate repository
+These mappings are the core contract of the repo. When changing paths, update them consistently everywhere.
 
-2. **Backup files** are stored in `backups/` directory (gitignored)
+| Repo source | Home target |
+| --- | --- |
+| `configs/zsh/zshrc` | `~/.zshrc` |
+| `configs/zsh/p10k.zsh` | `~/.p10k.zsh` |
+| `configs/tmux/tmux.conf` | `~/.tmux.conf` |
+| `configs/vi/vim/vimrc` | `~/.vimrc` |
+| `configs/vi/nvim` | `~/.config/nvim` |
+| `configs/ghostty` | `~/.config/ghostty` |
 
-3. **Symlinks**: Install script creates symlinks from repo files to home directory:
-   - `~/.zshrc` → `./configs/zsh/zshrc`
-   - `~/.tmux.conf` → `./configs/tmux/tmux.conf`
-   - `~/.vimrc` → `./configs/vi/vim/vimrc`
-   - `~/.config/nvim` → `./configs/vi/nvim`
-   - `~/.config/ghostty` → `./configs/ghostty`
-   - `~/.p10k.zsh` → `./configs/zsh/p10k.zsh`
+Backup location:
+- repo backup directory: `backups/`
 
-4. **Platform support**: Primary target is macOS, with Linux support for most features
+## High-Frequency Change Areas
 
-5. **Submodule setup**: fresh clones that need Neovim config should use `git submodule update --init --recursive`
+### 1. Config path changes
 
-6. **Do not review** `configs/vi/nvim/` directory (external submodule)
+If you move or rename anything under `configs/`, check all of:
+- `install.sh`
+- `uninstall.sh`
+- `README.md`
+- `AGENTS.md`
+- `.gitmodules` when `configs/vi/nvim` is involved
+
+### 2. Neovim submodule changes
+
+`configs/vi/nvim` is a git submodule.
+
+If its path changes, you must update both:
+- `.gitmodules`
+- the git index gitlink entry
+
+Useful checks:
+
+```bash
+git ls-files --stage | grep nvim
+git submodule status
+```
+
+### 3. Backup behavior changes
+
+If install/uninstall backup paths change, update both scripts and the documentation together.
+
+### 4. Helper script changes
+
+If files under `apps/` are renamed or added, update:
+- `README.md`
+- `AGENTS.md`
+- lint commands if needed
+
+## Working Rules
+
+### Shell style
+
+- Use tabs for indentation in shell scripts.
+- Keep shebangs as `#!/bin/bash` or `#!/usr/bin/env bash`.
+- Preserve current script style unless there is a good reason to normalize more broadly.
+- Prefer narrow edits over style churn.
+
+### File handling
+
+- Treat this repo as user-owned configuration.
+- Do not remove or overwrite unrelated user changes.
+- Keep backup behavior intact unless the task explicitly changes backup semantics.
+
+### Repo-specific behavior
+
+- `install.sh` should be rerunnable without mutating repo-owned config directories.
+- `uninstall.sh` should only remove managed symlinks and restore backups conservatively.
+- `ghostty`, `nvim`, and other directory symlinks need careful handling on macOS because `ln` can follow directory symlinks.
+
+## Do Not Touch By Default
+
+- Do not review or edit `configs/vi/nvim/` contents unless the user explicitly asks.
+- Do not change submodule contents when the task is only about path/layout/doc updates.
+- Do not modify files under `$HOME` as part of a repo-only change unless the user explicitly asks to run install/uninstall behavior.
+- Do not convert shell indentation away from tabs unless the file is already being reformatted intentionally.
+
+## Done Criteria
+
+For any path/layout/script change, the work is not complete until all relevant items below are true:
+
+1. `bash -n install.sh` passes.
+2. `bash -n uninstall.sh` passes.
+3. No docs still reference removed paths or old directory names.
+4. If `configs/vi/nvim` was touched or moved:
+   - `.gitmodules` is correct
+   - `git submodule status` works
+   - `git ls-files --stage` shows the correct gitlink path
+5. If helper scripts changed, their paths in docs match the repo.
+
+## Common Tasks
+
+### Add a new managed config
+
+1. Add files under `configs/<name>/`.
+2. Update `install.sh` symlink and backup logic.
+3. Update `uninstall.sh` restore logic.
+4. Update `README.md` and `AGENTS.md`.
+
+### Move a config directory
+
+1. Move the files.
+2. Update all path references in scripts and docs.
+3. If a submodule is involved, update `.gitmodules` and the git index.
+4. Run the validation commands.
+
+### Add a brew package or app
+
+1. Edit `apps/brew.sh`.
+2. Put formulae in `packages`.
+3. Put GUI apps / casks in `casks`.
+4. Keep the list changes scoped; do not reshuffle unrelated entries.
+
+### Review this repo
+
+Focus on:
+- broken path migrations
+- submodule consistency
+- symlink idempotency
+- backup/restore regressions
+- stale documentation after layout changes
