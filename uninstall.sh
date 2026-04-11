@@ -55,10 +55,10 @@ if [[ "${1}" == "all" || "${1}" == "tmux" ]]; then
 		echo "====> Remove tmux config file"
 		rm ~/.tmux.conf >/dev/null 2>&1
 
-		if [[ -f "${config_path}/bak/tmux.conf.bak" ]]; then
+		if [[ -f "${config_path}/backups/tmux.conf.bak" ]]; then
 			echo "====> Move backup tmux config file"
 			if [[ ! -f ~/.tmux.conf ]]; then
-				mv "${config_path}/bak/tmux.conf.bak" ~/.tmux.conf
+				mv "${config_path}/backups/tmux.conf.bak" ~/.tmux.conf
 			fi
 		fi
 
@@ -88,10 +88,10 @@ if [[ "${1}" == "all" || "${1}" == "vim" ]]; then
 		echo '====> Remove vimrc'
 		rm ~/.vimrc >/dev/null 2>&1
 
-		if [[ -f "${config_path}/bak/vimrc.bak" ]]; then
+		if [[ -f "${config_path}/backups/vimrc.bak" ]]; then
 			echo '====> Move vimrc file back'
 			if [[ ! -f ~/.vimrc ]]; then
-				mv "${config_path}"/bak/vimrc.bak ~/.vimrc
+				mv "${config_path}"/backups/vimrc.bak ~/.vimrc
 			fi
 		fi
 
@@ -116,10 +116,10 @@ if [[ "${1}" == "all" || "${1}" == "neovim" ]]; then
 		echo '====> Remove nvim config'
 		rm -r ~/.config/nvim >/dev/null 2>&1
 
-		if [[ -d "${config_path}/bak/nvim_bak" ]]; then
+		if [[ -d "${config_path}/backups/nvim_bak" ]]; then
 			echo '====> Move nvim folder back'
 			if [[ ! -d ~/.config/nvim ]]; then
-				mv "${config_path}"/bak/nvim_bak ~/.config/nvim >/dev/null 2>&1
+				mv "${config_path}"/backups/nvim_bak ~/.config/nvim >/dev/null 2>&1
 			fi
 		fi
 
@@ -144,10 +144,10 @@ if [[ "${1}" == "all" || "${1}" == "zsh" ]]; then
 		echo '====> Remove zshrc'
 		rm ~/.zshrc >/dev/null 2>&1
 
-		if [[ -f "${config_path}/bak/zshrc.bak" ]]; then
+		if [[ -f "${config_path}/backups/zshrc.bak" ]]; then
 			echo '====> Move zshrc file back'
 			if [[ ! -f ~/.zshrc ]]; then
-				mv "${config_path}/bak/zshrc.bak" ~/.zshrc
+				mv "${config_path}/backups/zshrc.bak" ~/.zshrc
 			fi
 		fi
 
@@ -155,16 +155,16 @@ if [[ "${1}" == "all" || "${1}" == "zsh" ]]; then
 		if [ -h ~/.p10k.zsh ]; then
 			rm ~/.p10k.zsh >/dev/null 2>&1
 		fi
-		if [[ -f "${config_path}/bak/p10k.zsh.bak" ]]; then
+		if [[ -f "${config_path}/backups/p10k.zsh.bak" ]]; then
 			echo '====> Move P10k config file back'
 			if [[ ! -f ~/.p10k.zsh ]]; then
-				mv "${config_path}/bak/p10k.zsh.bak" ~/.p10k.zsh
+				mv "${config_path}/backups/p10k.zsh.bak" ~/.p10k.zsh
 			fi
 		fi
 
 		echo "====> Remove fzf plugin"
-		if [[ -f "${config_path}/bak/fzf.zsh.bak" ]]; then
-			mv "${config_path}/bak/fzf.zsh.bak" ~/.fzf.zsh
+		if [[ -f "${config_path}/backups/fzf.zsh.bak" ]]; then
+			mv "${config_path}/backups/fzf.zsh.bak" ~/.fzf.zsh
 		else
 			remove_fzf_custom_config ~/.fzf.zsh
 		fi
@@ -187,10 +187,10 @@ if [[ "${1}" == "all" || "${1}" == "ghostty" ]]; then
 		echo '====> Remove ghostty config'
 		rm -r ~/.config/ghostty >/dev/null 2>&1
 
-		if [[ -d "${config_path}/bak/ghostty_bak" ]]; then
+		if [[ -d "${config_path}/backups/ghostty_bak" ]]; then
 			echo '====> Move ghostty folder back'
 			if [[ ! -d ~/.config/ghostty ]]; then
-				mv "${config_path}"/bak/ghostty_bak ~/.config/ghostty >/dev/null 2>&1
+				mv "${config_path}"/backups/ghostty_bak ~/.config/ghostty >/dev/null 2>&1
 			fi
 		fi
 

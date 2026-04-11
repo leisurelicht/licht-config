@@ -228,8 +228,8 @@ if [ ! -d "${HOME}/.config/" ]; then
 	mkdir -p "${HOME}/.config"
 fi
 
-if [ ! -d "${config_path}/bak" ]; then
-	mkdir -p "${config_path}/bak"
+if [ ! -d "${config_path}/backups" ]; then
+	mkdir -p "${config_path}/backups"
 fi
 
 #
@@ -246,32 +246,32 @@ if [[ ${tmux} == 1 ]]; then
 	fi
 
 	if [[ -f ~/.tmux.conf ]]; then
-		if [[ -L ~/.tmux.conf && "$(readlink ~/.tmux.conf)" == "${config_path}/tmux/tmux.conf" ]]; then
+		if [[ -L ~/.tmux.conf && "$(readlink ~/.tmux.conf)" == "${config_path}/configs/tmux/tmux.conf" ]]; then
 			echo "====> Tmux config symlink already exists and points to correct location."
 		else
 			echo "====> Tmux config file [tmux.conf] is exist, backup and delete it."
-			mv ~/.tmux.conf "${config_path}/bak/tmux.conf.bak"
+			mv ~/.tmux.conf "${config_path}/backups/tmux.conf.bak"
 		fi
 	fi
 
 	echo "====> Create symlink for tmux config"
-	ln -sf "${config_path}/tmux/tmux.conf" ~/.tmux.conf
+	ln -sf "${config_path}/configs/tmux/tmux.conf" ~/.tmux.conf
 fi
 
 if [[ ${vim} == 1 ]]; then
 	# 安装 vim 配置文件
 	if [ -f "${HOME}/.vimrc" ]; then
-		if [[ -L "${HOME}/.vimrc" && "$(readlink "${HOME}/.vimrc")" == "${config_path}/vi/vim/vimrc" ]]; then
+		if [[ -L "${HOME}/.vimrc" && "$(readlink "${HOME}/.vimrc")" == "${config_path}/configs/vi/vim/vimrc" ]]; then
 			echo "====> Vim config symlink already exists and points to correct location."
 		else
 			echo "====> Vim config file the vimrc has exist"
-			echo "====> Backup to [ ${config_path}/bak ] and delete it."
-			mv "${HOME}/.vimrc" "${config_path}/bak/vimrc.bak"
+			echo "====> Backup to [ ${config_path}/backups ] and delete it."
+			mv "${HOME}/.vimrc" "${config_path}/backups/vimrc.bak"
 		fi
 	fi
 
 	echo "====> Create symlink for vim config"
-	ln -sf "${config_path}/vi/vim/vimrc" "${HOME}/.vimrc"
+	ln -sf "${config_path}/configs/vi/vim/vimrc" "${HOME}/.vimrc"
 
 	# 安装vim插件
 	echo "====> Install vim plugins"
@@ -282,7 +282,7 @@ if [[ ${neovim} == 1 ]]; then
 	# 安装 neovim 配置文件
 	if [ -d "${HOME}/.config/nvim" ]; then
 		if [ -h "${HOME}/.config/nvim" ]; then
-			if [[ "$(readlink "${HOME}/.config/nvim")" == "${config_path}/vi/nvim" ]]; then
+			if [[ "$(readlink "${HOME}/.config/nvim")" == "${config_path}/configs/vi/nvim" ]]; then
 				echo "====> Neovim config symlink already exists and points to correct location."
 			else
 				echo "====> Neovim config dir is a link file, only delete it."
@@ -290,13 +290,13 @@ if [[ ${neovim} == 1 ]]; then
 			fi
 		else
 			echo "====> Neovim config dir the nvim has exist"
-			echo "====> Backup to [ ${config_path}/bak ] and delete it."
-			mv "${HOME}/.config/nvim" "${config_path}/bak/nvim_bak"
+			echo "====> Backup to [ ${config_path}/backups ] and delete it."
+			mv "${HOME}/.config/nvim" "${config_path}/backups/nvim_bak"
 		fi
 	fi
 
 	echo "====> Create symlink for neovim config"
-	ln -sf "${config_path}/vi/nvim" "${HOME}/.config/nvim"
+	ln -sf "${config_path}/configs/vi/nvim" "${HOME}/.config/nvim"
 
 	# 安装neovim插件
 	echo "====> Install nvim plugins"
@@ -343,12 +343,12 @@ if [[ ${zsh} == 1 ]]; then
 	# 更新的 fzf 配置文件
 	if [[ -f "${HOME}/.fzf.zsh" ]]; then
 		echo "====> Fzf config file [ ${HOME}/.fzf.zsh ] exist, update it."
-		fzf_config=$(cat "${config_path}/zsh/fzf.zsh")
+		fzf_config=$(cat "${config_path}/configs/zsh/fzf.zsh")
 		if grep -qxF "${fzf_config_start}" "${HOME}/.fzf.zsh"; then
 			echo "====> Custom Fzf config is already insert to [ ${HOME}/.fzf.zsh ]"
 		else
-			if [[ ! -f "${config_path}/bak/fzf.zsh.bak" ]]; then
-				cp "${HOME}/.fzf.zsh" "${config_path}/bak/fzf.zsh.bak"
+			if [[ ! -f "${config_path}/backups/fzf.zsh.bak" ]]; then
+				cp "${HOME}/.fzf.zsh" "${config_path}/backups/fzf.zsh.bak"
 			fi
 			echo "====> Append Custom Fzf config to [ ${HOME}/.fzf.zsh ]"
 			echo "${fzf_config}" >>"${HOME}"/.fzf.zsh
@@ -357,30 +357,30 @@ if [[ ${zsh} == 1 ]]; then
 
 	# 备份已有的p10k.zsh文件
 	if [[ -f "${HOME}/.p10k.zsh" ]]; then
-		if [[ -L "${HOME}/.p10k.zsh" && "$(readlink "${HOME}/.p10k.zsh")" == "${config_path}/zsh/p10k.zsh" ]]; then
+		if [[ -L "${HOME}/.p10k.zsh" && "$(readlink "${HOME}/.p10k.zsh")" == "${config_path}/configs/zsh/p10k.zsh" ]]; then
 			echo "====> P10k config symlink already exists and points to correct location."
 		else
 			echo "====> P10k config file .p10k.zsh is exist."
-			echo "====> Backup to [ ${config_path}/bak ] and delete it."
-			mv "${HOME}/.p10k.zsh" "${config_path}"/bak/p10k.zsh.bak
+			echo "====> Backup to [ ${config_path}/backups ] and delete it."
+			mv "${HOME}/.p10k.zsh" "${config_path}"/backups/p10k.zsh.bak
 		fi
 	fi
 
 	echo "====> Create symlink for p10k config"
-	ln -sf "${config_path}"/zsh/p10k.zsh ~/.p10k.zsh
+	ln -sf "${config_path}"/configs/zsh/p10k.zsh ~/.p10k.zsh
 
 	if [[ -f "${HOME}/.zshrc" ]]; then
-		if [[ -L "${HOME}/.zshrc" && "$(readlink "${HOME}/.zshrc")" == "${config_path}/zsh/zshrc" ]]; then
+		if [[ -L "${HOME}/.zshrc" && "$(readlink "${HOME}/.zshrc")" == "${config_path}/configs/zsh/zshrc" ]]; then
 			echo "====> Zsh config symlink already exists and points to correct location."
 		else
 			echo "====> Zsh config file the [ zshrc ] has exist."
-			echo "====> Backup to [ ${config_path}/bak ] and delete it."
-			mv "${HOME}/.zshrc" "${config_path}/bak/zshrc.bak"
+			echo "====> Backup to [ ${config_path}/backups ] and delete it."
+			mv "${HOME}/.zshrc" "${config_path}/backups/zshrc.bak"
 		fi
 	fi
 
 	echo "====> Create symlink for zsh config"
-	ln -sf "${config_path}"/zsh/zshrc ~/.zshrc
+	ln -sf "${config_path}"/configs/zsh/zshrc ~/.zshrc
 
 	echo "====> Change to zsh"
 	current_shell=$(basename "$SHELL")
@@ -399,7 +399,7 @@ if [[ ${ghostty} == 1 ]]; then
 
 	if [ -d "${HOME}/.config/ghostty" ]; then
 		if [ -h "${HOME}/.config/ghostty" ]; then
-			if [[ "$(readlink "${HOME}/.config/ghostty")" == "${config_path}/ghostty" ]]; then
+			if [[ "$(readlink "${HOME}/.config/ghostty")" == "${config_path}/configs/ghostty" ]]; then
 				echo "====> Ghostty config symlink already exists and points to correct location."
 				create_ghostty_symlink=0
 			else
@@ -408,14 +408,14 @@ if [[ ${ghostty} == 1 ]]; then
 			fi
 		else
 			echo "====> Ghostty config dir has exist"
-			echo "====> Backup to [ ${config_path}/bak ] and delete it."
-			mv "${HOME}/.config/ghostty" "${config_path}/bak/ghostty_bak"
+			echo "====> Backup to [ ${config_path}/backups ] and delete it."
+			mv "${HOME}/.config/ghostty" "${config_path}/backups/ghostty_bak"
 		fi
 	fi
 
 	if [[ ${create_ghostty_symlink} == 1 ]]; then
 		echo "====> Create symlink for ghostty config"
-		ln -sf "${config_path}/ghostty" "${HOME}/.config/ghostty"
+		ln -sf "${config_path}/configs/ghostty" "${HOME}/.config/ghostty"
 	fi
 fi
 

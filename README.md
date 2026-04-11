@@ -42,13 +42,11 @@
 
 ```text
 .
-├── bak
-├── installed // brew install soft list
+├── backups
+├── apps // install helper scripts
 ├── LICENSE
 ├── README.md
-├── tmux // tmux configuration
-├── vi // vim & neovim configuration
-└── zsh // zsh configuration
+└── configs // tmux, vim, neovim, zsh, ghostty configuration
 
 ```
 
@@ -84,7 +82,7 @@ git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
 #### File structure
 
 ```text
-└── zsh
+└── configs/zsh
    ├── aliasrc // command aliasrc
    ├── export_env // environment
    ├── fzf.zsh // fzf configuration file
@@ -122,7 +120,7 @@ git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
   3. only install mini tmux config
 
   ```
-  curl -o ~/.tmux.conf https://raw.githubusercontent.com/leisurelicht/.licht-config/master/tmux/mini.conf
+  curl -o ~/.tmux.conf https://raw.githubusercontent.com/leisurelicht/.licht-config/master/configs/tmux/mini.conf
   ```
 
 
@@ -213,7 +211,7 @@ git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
   2. only install mini vim
 
   ```bash
-  curl -o ~/.vimrc https://raw.githubusercontent.com/leisurelicht/.licht-config/master/vi/vim/mini
+  curl -o ~/.vimrc https://raw.githubusercontent.com/leisurelicht/.licht-config/master/configs/vi/vim/mini
   ```
 
 - uninstall

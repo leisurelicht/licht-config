@@ -10,21 +10,23 @@ Personal dotfiles repository for managing shell, editor, and terminal configurat
 .
 ├── install.sh          # Main installation script
 ├── uninstall.sh        # Uninstallation script
-├── zsh/                # Zsh configuration
-│   ├── zshrc           # Main zsh config (sourced via symlink)
-│   ├── aliasrc         # Aliases and functions
-│   ├── export_env      # Environment variables (private)
-│   ├── fzf.zsh         # FZF custom config
-│   └── p10k.zsh        # Powerlevel10k theme config
-├── tmux/               # Tmux configuration
-│   ├── tmux.conf       # Main tmux config
-│   └── mini.conf       # Minimal config for quick setup
-├── vi/                 # Vim/Neovim configuration
-│   ├── vim/vimrc       # Vim config
-│   └── nvim/           # Neovim config (git submodule)
+├── configs/            # Dotfile configurations
+│   ├── zsh/            # Zsh configuration
+│   │   ├── zshrc       # Main zsh config (sourced via symlink)
+│   │   ├── aliasrc     # Aliases and functions
+│   │   ├── export_env  # Environment variables (private)
+│   │   ├── fzf.zsh     # FZF custom config
+│   │   └── p10k.zsh    # Powerlevel10k theme config
+│   ├── tmux/           # Tmux configuration
+│   │   ├── tmux.conf   # Main tmux config
+│   │   └── mini.conf   # Minimal config for quick setup
+│   ├── vi/             # Vim/Neovim configuration
+│   │   ├── vim/vimrc   # Vim config
+│   │   └── nvim/       # Neovim config (git submodule)
+│   └── ghostty/        # Ghostty configuration
 ├── installed/          # Helper scripts
 │   └── brew_install.sh
-└── bak/                # Backup directory (gitignored)
+└── backups/            # Backup directory (gitignored)
 ```
 
 ## Commands
@@ -102,17 +104,17 @@ docs: update README installation instructions
 
 ## Important Notes
 
-1. **Neovim config** (`vi/nvim`) is a git submodule pointing to a separate repository
+1. **Neovim config** (`configs/vi/nvim`) is a git submodule pointing to a separate repository
 
-2. **Backup files** are stored in `bak/` directory (gitignored)
+2. **Backup files** are stored in `backups/` directory (gitignored)
 
 3. **Symlinks**: Install script creates symlinks from repo files to home directory:
-   - `~/.zshrc` → `./zsh/zshrc`
-   - `~/.tmux.conf` → `./tmux/tmux.conf`
-   - `~/.vimrc` → `./vi/vim/vimrc`
-   - `~/.config/nvim` → `./vi/nvim`
-   - `~/.p10k.zsh` → `./zsh/p10k.zsh`
+   - `~/.zshrc` → `./configs/zsh/zshrc`
+   - `~/.tmux.conf` → `./configs/tmux/tmux.conf`
+   - `~/.vimrc` → `./configs/vi/vim/vimrc`
+   - `~/.config/nvim` → `./configs/vi/nvim`
+   - `~/.p10k.zsh` → `./configs/zsh/p10k.zsh`
 
 4. **Platform support**: Primary target is macOS, with Linux support for most features
 
-5. **Do not review** `vi/nvim/` directory (external submodule)
+5. **Do not review** `configs/vi/nvim/` directory (external submodule)
