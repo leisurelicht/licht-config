@@ -23,8 +23,7 @@ Personal dotfiles repository for managing shell, editor, and terminal configurat
 │   ├── vim/vimrc       # Vim config
 │   └── nvim/           # Neovim config (git submodule)
 ├── installed/          # Helper scripts
-│   ├── brew_install.sh
-│   └── brew_cask_install.sh
+│   └── brew_install.sh
 └── bak/                # Backup directory (gitignored)
 ```
 

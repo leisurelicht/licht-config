@@ -25,6 +25,18 @@ packages=(
 	"nmap"
 )
 
+casks=(
+	"google-chrome"
+	"cheatsheet"
+	"itsycal"
+	"browserosaurus"
+	"thor"
+	"iterm2"
+	"devtoys"
+	"cursor"
+	"masscode"
+)
+
 echo "Installing ${#packages[@]} packages..."
 
 for pkg in "${packages[@]}"; do
@@ -34,6 +46,19 @@ for pkg in "${packages[@]}"; do
 		echo "[Installing] $pkg"
 		if ! brew install "$pkg"; then
 			echo "[Error] Failed to install $pkg"
+		fi
+	fi
+done
+
+echo "Installing ${#casks[@]} casks..."
+
+for cask in "${casks[@]}"; do
+	if brew list --cask "$cask" >/dev/null 2>&1; then
+		echo "[OK] $cask already installed"
+	else
+		echo "[Installing] $cask"
+		if ! brew install --cask "$cask"; then
+			echo "[Error] Failed to install $cask"
 		fi
 	fi
 done
