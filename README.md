@@ -51,6 +51,20 @@
 └── configs // tmux, vim, neovim, zsh, ghostty configuration
 ```
 
+## Quick Start
+
+```bash
+git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
+cd .licht-config
+git submodule update --init --recursive
+
+# install one config
+./install.sh zsh
+
+# or install brew packages/apps from this repo
+./apps/brew.sh all
+```
+
 ## Usage
 
 ### Clone repository
