@@ -13,6 +13,122 @@ config_path=$(
 	pwd
 )
 
+print_usage() {
+	cat <<'EOF'
+Usage:
+  ./uninstall.sh all
+  ./uninstall.sh configs [all|zsh|tmux|vim|neovim|ghostty]
+  ./uninstall.sh apps [brew|claude] [all|formula|cask]
+EOF
+}
+
+has() {
+	command -v "$1" >/dev/null 2>&1
+}
+
+uninstall_apps() {
+	local app=${1:-}
+	local brew_mode=${2:-}
+
+	if [[ -z "${app}" ]]; then
+		print_usage
+		exit 0
+	fi
+
+	if ! has brew; then
+		echo "====> Error: [ brew ] is not installed."
+		exit 1
+	fi
+
+	case "${app}" in
+	brew)
+		if [[ -z "${brew_mode}" ]]; then
+			print_usage
+			exit 0
+		fi
+
+		packages=(
+			"mycli"
+			"wget"
+			"git"
+			"tig"
+			"cloc"
+			"ctop"
+			"gibo"
+			"bat"
+			"lazygit"
+			"pyenv"
+			"zoxide"
+			"trash"
+			"htop"
+			"bottom"
+			"nmap"
+			"uv"
+		)
+
+		casks=(
+			"google-chrome"
+			"cheatsheet"
+			"itsycal"
+			"browserosaurus"
+			"thor"
+			"iterm2"
+			"spotify"
+			"devtoys"
+			"cursor"
+			"ghostty"
+			"obsidian"
+			"claude-code"
+			"geph"
+			"visual-studio-code"
+			"codex"
+			"codex-app"
+			"codeisland"
+			"masscode"
+		)
+
+		if [[ "${brew_mode}" != "all" && "${brew_mode}" != "formula" && "${brew_mode}" != "cask" ]]; then
+			echo "====> Error: Unknown brew mode: ${brew_mode}"
+			print_usage
+			exit 1
+		fi
+
+		if [[ "${brew_mode}" == "all" || "${brew_mode}" == "formula" ]]; then
+			for pkg in "${packages[@]}"; do
+				if brew list --formula "$pkg" >/dev/null 2>&1; then
+					echo "----> Uninstall brew formula [ ${pkg} ]"
+					brew uninstall "$pkg" >/dev/null 2>&1 || true
+				fi
+			done
+		fi
+
+		if [[ "${brew_mode}" == "all" || "${brew_mode}" == "cask" ]]; then
+			for cask in "${casks[@]}"; do
+				if brew list --cask "$cask" >/dev/null 2>&1; then
+					echo "----> Uninstall brew cask [ ${cask} ]"
+					brew uninstall --cask "$cask" >/dev/null 2>&1 || true
+				fi
+			done
+		fi
+		;;
+	claude)
+		if brew list --formula "dippy" >/dev/null 2>&1; then
+			echo "----> Uninstall brew formula [ dippy ]"
+			brew uninstall "dippy" >/dev/null 2>&1 || true
+		fi
+		if brew tap | grep -q "^ldayton/dippy$"; then
+			echo "----> Remove brew tap [ ldayton/dippy ]"
+			brew untap "ldayton/dippy" >/dev/null 2>&1 || true
+		fi
+		;;
+	*)
+		echo "====> Error: Unknown apps parameter: ${app}"
+		print_usage
+		exit 1
+		;;
+	esac
+}
+
 remove_fzf_custom_config() {
 	local target_file=$1
 	local tmp_file
@@ -70,6 +186,38 @@ move_path() {
 	fi
 }
 
+primary=${1:-}
+secondary=${2:-}
+
+if [[ -z "${primary}" ]]; then
+	print_usage
+	exit 1
+fi
+
+case "${primary}" in
+all)
+	uninstall_apps "brew" "all"
+	uninstall_apps "claude"
+	set -- all
+	;;
+configs)
+	if [[ -z "${secondary}" ]]; then
+		print_usage
+		exit 0
+	fi
+	set -- "${secondary}"
+	;;
+apps)
+	uninstall_apps "${secondary}" "${3:-}"
+	exit 0
+	;;
+*)
+	echo "====> Error: Unknown parameter: ${primary}"
+	print_usage
+	exit 1
+	;;
+esac
+
 commands=("all" "zsh" "tmux" "vim" "neovim" "ghostty")
 command_found=0
 for command in "${commands[@]}"; do
@@ -79,10 +227,9 @@ for command in "${commands[@]}"; do
 	fi
 done
 
-# 判断第一个命令行参数是否是 commands 中的一个
 if [[ ${command_found} -ne 1 ]]; then
 	echo "====> Error: Unknown parameter: ${1}"
-	echo "====> Usage: ./uninstall.sh [all|zsh|tmux|vim|neovim|ghostty]"
+	print_usage
 	exit 1
 fi
 

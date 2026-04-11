@@ -272,6 +272,101 @@ config_path=$(
 
 echo "====> Config file root path is: ${config_path}"
 
+print_usage() {
+	cat <<'EOF'
+Usage:
+  ./install.sh all [brew_mode]
+    brew_mode: all|formula|cask
+
+  ./install.sh apps [all|brew|claude] [brew_mode]
+    brew_mode: all|formula|cask (default: all)
+
+  ./install.sh configs [all|zsh|tmux|vim|neovim|ghostty]
+EOF
+}
+
+install_apps() {
+	local app=${1:-all}
+	local brew_mode=${2:-all}
+
+	case "${app}" in
+	all)
+		"${config_path}/apps/brew.sh" "${brew_mode}"
+		"${config_path}/apps/for_claude.sh"
+		;;
+	brew)
+		"${config_path}/apps/brew.sh" "${brew_mode}"
+		;;
+	claude)
+		"${config_path}/apps/for_claude.sh"
+		;;
+	*)
+		echo "====> Error: Unknown apps parameter: ${app}"
+		print_usage
+		exit 1
+		;;
+	esac
+}
+
+primary=${1:-}
+secondary=${2:-}
+
+if [[ -z "${primary}" ]]; then
+	print_usage
+	exit 1
+fi
+
+if [[ "${primary}" == "all" ]]; then
+	if [[ -z "${secondary}" ]]; then
+		print_usage
+		exit 0
+	fi
+
+	install_apps "brew" "${secondary}"
+	install_apps "claude"
+
+	# continue with configs all
+	set -- configs all
+	primary=${1}
+	secondary=${2}
+fi
+
+if [[ "${primary}" == "apps" ]]; then
+	if [[ -z "${secondary}" ]]; then
+		print_usage
+		exit 0
+	fi
+
+	case "${secondary}" in
+	brew|all)
+		if [[ -z "${3:-}" ]]; then
+			print_usage
+			exit 0
+		fi
+		install_apps "${secondary}" "${3}"
+		;;
+	claude)
+		install_apps "${secondary}"
+		;;
+	*)
+		install_apps "${secondary}" "${3:-all}"
+		;;
+	esac
+	exit 0
+fi
+
+if [[ "${primary}" == "configs" ]]; then
+	if [[ -z "${secondary}" ]]; then
+		print_usage
+		exit 0
+	fi
+	shift
+else
+	echo "====> Error: Unknown parameter: ${primary}"
+	print_usage
+	exit 1
+fi
+
 commands=("all" "zsh" "tmux" "vim" "neovim" "ghostty")
 command_found=0
 for command in "${commands[@]}"; do
@@ -281,10 +376,9 @@ for command in "${commands[@]}"; do
 	fi
 done
 
-# 判断第一个命令行参数是否是 commands 中的一个
 if [[ ${command_found} -ne 1 ]]; then
 	echo "====> Error: Unknown parameter: ${1}"
-	echo "====> Usage: ./install.sh [all|zsh|tmux|vim|neovim|ghostty]"
+	print_usage
 	exit 1
 fi
 
