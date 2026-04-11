@@ -40,6 +40,11 @@
 
 > Note: the Neovim configuration under `configs/vi/nvim` is no longer actively maintained in this repository.
 
+## Maintenance status
+
+- Active: `configs/zsh`, `configs/tmux`, `configs/vi/vim`, `configs/ghostty`, `apps/`, `install.sh`, `uninstall.sh`
+- Frozen: `configs/vi/nvim` (submodule)
+
 ## File structure
 
 ```text

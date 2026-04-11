@@ -44,12 +44,15 @@ This repo is primarily a symlink-based config installer:
 
 ```bash
 ./apps/brew.sh
+./apps/check.sh
 ./apps/for_claude.sh
 ```
 
 ### Validation
 
 ```bash
+./apps/check.sh
+
 bash -n install.sh
 bash -n uninstall.sh
 
