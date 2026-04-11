@@ -210,20 +210,20 @@ if [[ -z "${primary}" ]]; then
 	exit 1
 fi
 
-	case "${primary}" in
-	all)
-		if has brew; then
-			uninstall_apps "brew" "all"
+case "${primary}" in
+all)
+	if has brew; then
+		uninstall_apps "brew" "all"
 		uninstall_apps "claude"
 	else
 		echo "====> Warning: [ brew ] is not installed, skip apps uninstall."
 	fi
-		set -- all
-		;;
-	conf)
-		if [[ -z "${secondary}" ]]; then
-			print_usage
-			exit 0
+	set -- all
+	;;
+conf)
+	if [[ -z "${secondary}" ]]; then
+		print_usage
+		exit 0
 	fi
 	set -- "${secondary}"
 	;;

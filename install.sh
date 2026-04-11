@@ -10,6 +10,7 @@ fail() {
 }
 
 fzf_config_start="# Fzf Custom Config"
+fzf_config_end="# End Fzf Custom Config"
 
 brew_has() {
 	brew list --formula -1 "$1" >/dev/null 2>&1
@@ -56,7 +57,7 @@ ensure_brew_cask() {
 ensure_brew_tap() {
 	local tap_name=$1
 
-	if ! brew tap | grep -q "^${tap_name}$"; then
+	if ! brew tap | grep -Fxq "${tap_name}"; then
 		if ! brew tap "${tap_name}"; then
 			fail "Failed to add brew tap [ ${tap_name} ]."
 		fi
@@ -71,7 +72,7 @@ ensure_file_symlink() {
 	local existing_message=$5
 	local create_message=$6
 
-	if [[ -f "${target_path}" ]]; then
+	if [[ ( -e "${target_path}" || -L "${target_path}" ) && ! -d "${target_path}" ]]; then
 		if [[ -L "${target_path}" && "$(readlink "${target_path}")" == "${source_path}" ]]; then
 			echo "====> ${link_label} symlink already exists and points to correct location."
 			return 1
@@ -100,7 +101,12 @@ ensure_dir_symlink() {
 	local existing_message=$5
 	local create_message=$6
 
-	if [[ -d "${target_path}" ]]; then
+	if [[ -h "${target_path}" && ! -d "${target_path}" ]]; then
+		echo "====> ${link_label} dir is a link file, only delete it."
+		if ! rm -r "${target_path}"; then
+			fail "Failed to remove existing symlinked directory [ ${target_path} ]."
+		fi
+	elif [[ -d "${target_path}" ]]; then
 		if [[ -h "${target_path}" ]]; then
 			if [[ "$(readlink "${target_path}")" == "${source_path}" ]]; then
 				echo "====> ${link_label} symlink already exists and points to correct location."
@@ -126,6 +132,51 @@ ensure_dir_symlink() {
 	if ! ln -sf "${source_path}" "${target_path}"; then
 		fail "Failed to create symlink [ ${target_path} ] -> [ ${source_path} ]."
 	fi
+}
+
+upsert_fzf_custom_config() {
+	local target_file=$1
+	local source_file=$2
+	local backup_file=$3
+	local tmp_file
+	local start_line
+	local end_line
+
+	if [[ ! -f "${target_file}" ]]; then
+		return
+	fi
+	if [[ ! -f "${source_file}" ]]; then
+		fail "Missing fzf config source file [ ${source_file} ]."
+	fi
+
+	if [[ ! -f "${backup_file}" ]]; then
+		if ! cp "${target_file}" "${backup_file}"; then
+			fail "Failed to back up [ ${target_file} ]."
+		fi
+	fi
+
+	start_line=$(grep -nFx "${fzf_config_start}" "${target_file}" | head -n 1 | cut -d: -f1)
+	end_line=$(grep -nFx "${fzf_config_end}" "${target_file}" | tail -n 1 | cut -d: -f1)
+
+	tmp_file=$(mktemp)
+	trap 'rm -f "${tmp_file}" >/dev/null 2>&1 || true' RETURN
+	if [[ -n "${start_line}" && -n "${end_line}" && ${end_line} -ge ${start_line} ]]; then
+		sed "${start_line},${end_line}d" "${target_file}" >"${tmp_file}"
+	elif [[ -n "${start_line}" ]]; then
+		# Start marker exists but end marker missing/corrupted: remove start..EOF to avoid duplicates.
+		sed "${start_line},\$d" "${target_file}" >"${tmp_file}"
+	elif [[ -n "${end_line}" ]]; then
+		# End marker exists without start marker: remove only the marker line (least destructive).
+		sed "${end_line}d" "${target_file}" >"${tmp_file}"
+	else
+		cat "${target_file}" >"${tmp_file}"
+	fi
+
+	{
+		cat "${tmp_file}"
+		echo ""
+		cat "${source_file}"
+	} >"${target_file}"
 }
 
 install_on_mac() {
@@ -436,10 +487,11 @@ ghostty)
 	;;
 esac
 
-if [[ $(uname -s) == 'Darwin' ]]; then
+os_name=$(uname -s)
+if [[ ${os_name} == 'Darwin' ]]; then
 	log_root_path_once
 	install_on_mac
-elif [[ $(uname -s) == 'Linux' ]]; then
+elif [[ ${os_name} == 'Linux' ]]; then
 	log_root_path_once
 	install_on_linux
 fi
@@ -451,13 +503,22 @@ ensure_dir_exists "${config_path}/backups"
 if [[ ${tmux} == 1 ]]; then
 	echo "====> Install tmux plugins manage plugin tpm"
 	if [ ! -d ~/.tmux/plugins/tpm ]; then
+		tpm_created=0
+		if ! mkdir -p ~/.tmux/plugins; then
+			echo "====> Error: Failed to create ~/.tmux/plugins"
+			exit 1
+		fi
+		if [[ ! -e ~/.tmux/plugins/tpm && ! -L ~/.tmux/plugins/tpm ]]; then
+			tpm_created=1
+		fi
 		if ! git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm; then
-			rm -r ~/.tmux/plugins/tpm >/dev/null 2>&1
+			if [[ ${tpm_created} -eq 1 ]]; then
+				rm -rf ~/.tmux/plugins/tpm >/dev/null 2>&1 || true
+			fi
 			echo "====> Error: Download tpm failed, install stop"
 			exit 1
-		else
-			echo "====> Download tpm Succeed"
 		fi
+		echo "====> Download tpm Succeed"
 	fi
 
 	ensure_file_symlink \
@@ -480,7 +541,11 @@ if [[ ${vim} == 1 ]]; then
 
 	# 安装vim插件
 	echo "====> Install vim plugins"
-	vim +PlugInstall +UpdateRemotePlugins +qa
+	if has vim; then
+		vim +PlugInstall +UpdateRemotePlugins +qa
+	else
+		echo "====> Warning: vim not found, skip plugin install."
+	fi
 fi
 
 if [[ ${neovim} == 1 ]]; then
@@ -494,7 +559,11 @@ if [[ ${neovim} == 1 ]]; then
 
 	# 安装neovim插件
 	echo "====> Install nvim plugins"
-	nvim +Lazy +qa
+	if has nvim; then
+		nvim +Lazy +qa
+	else
+		echo "====> Warning: nvim not found, skip plugin install."
+	fi
 
 fi
 
@@ -537,20 +606,10 @@ if [[ ${zsh} == 1 ]]; then
 	# 更新的 fzf 配置文件
 	if [[ -f "${HOME}/.fzf.zsh" ]]; then
 		echo "====> Fzf config file [ ${HOME}/.fzf.zsh ] exist, update it."
-		fzf_config=$(cat "${config_path}/configs/zsh/fzf.zsh")
-		if grep -qxF "${fzf_config_start}" "${HOME}/.fzf.zsh"; then
-			echo "====> Custom Fzf config is already insert to [ ${HOME}/.fzf.zsh ]"
-		else
-			if [[ ! -f "${config_path}/backups/fzf.zsh.bak" ]]; then
-				if ! cp "${HOME}/.fzf.zsh" "${config_path}/backups/fzf.zsh.bak"; then
-					fail "Failed to back up [ ${HOME}/.fzf.zsh ]."
-				fi
-			fi
-			echo "====> Append Custom Fzf config to [ ${HOME}/.fzf.zsh ]"
-			if ! echo "${fzf_config}" >>"${HOME}"/.fzf.zsh; then
-				fail "Failed to update [ ${HOME}/.fzf.zsh ]."
-			fi
-		fi
+		upsert_fzf_custom_config \
+			"${HOME}/.fzf.zsh" \
+			"${config_path}/configs/zsh/fzf.zsh" \
+			"${config_path}/backups/fzf.zsh.bak"
 	fi
 
 	ensure_file_symlink \
