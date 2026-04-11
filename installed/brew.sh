@@ -34,6 +34,7 @@ casks=(
 	"browserosaurus"
 	"thor"
 	"iterm2"
+	"spotify"
 	"devtoys"
 	"cursor"
 	"ghostty"
