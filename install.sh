@@ -33,10 +33,7 @@ install_on_mac() {
 			fi
 		done
 
-		if ! brew tap | grep -q "homebrew/cask-fonts"; then
-			brew tap homebrew/cask-fonts
-		fi
-		if ! brew list --cask 2>/dev/null | grep -q "font-hack-nerd-font"; then
+		if ! brew list --cask font-hack-nerd-font >/dev/null 2>&1; then
 			brew install --cask font-hack-nerd-font
 		fi
 
@@ -182,7 +179,7 @@ config_path=$(
 
 echo "====> Config file root path is: ${config_path}"
 
-commands=("all" "zsh" "tmux" "vim" "neovim")
+commands=("all" "zsh" "tmux" "vim" "neovim" "ghostty")
 command_found=0
 for command in "${commands[@]}"; do
 	if [[ "${command}" == "${1}" ]]; then
@@ -194,15 +191,15 @@ done
 # 判断第一个命令行参数是否是 commands 中的一个
 if [[ ${command_found} -ne 1 ]]; then
 	echo "====> Error: Unknown parameter: ${1}"
-	echo "====> Usage: ./install.sh [all|zsh|tmux|vim|neovim]"
+	echo "====> Usage: ./install.sh [all|zsh|tmux|vim|neovim|ghostty]"
 	exit 1
 fi
 
-zsh=0 tmux=0 vim=0 neovim=0
+zsh=0 tmux=0 vim=0 neovim=0 ghostty=0
 
 case ${1} in
 all)
-	zsh=1 tmux=1 vim=1 neovim=1
+	zsh=1 tmux=1 vim=1 neovim=1 ghostty=1
 	;;
 zsh)
 	zsh=1
@@ -215,6 +212,9 @@ vim)
 	;;
 neovim)
 	neovim=1
+	;;
+ghostty)
+	ghostty=1
 	;;
 esac
 
@@ -392,6 +392,31 @@ if [[ ${zsh} == 1 ]]; then
 		fi
 	fi
 	zsh -lc 'source ~/.zshrc'
+fi
+
+if [[ ${ghostty} == 1 ]]; then
+	create_ghostty_symlink=1
+
+	if [ -d "${HOME}/.config/ghostty" ]; then
+		if [ -h "${HOME}/.config/ghostty" ]; then
+			if [[ "$(readlink "${HOME}/.config/ghostty")" == "${config_path}/ghostty" ]]; then
+				echo "====> Ghostty config symlink already exists and points to correct location."
+				create_ghostty_symlink=0
+			else
+				echo "====> Ghostty config dir is a link file, only delete it."
+				rm -r "${HOME}/.config/ghostty"
+			fi
+		else
+			echo "====> Ghostty config dir has exist"
+			echo "====> Backup to [ ${config_path}/bak ] and delete it."
+			mv "${HOME}/.config/ghostty" "${config_path}/bak/ghostty_bak"
+		fi
+	fi
+
+	if [[ ${create_ghostty_symlink} == 1 ]]; then
+		echo "====> Create symlink for ghostty config"
+		ln -sf "${config_path}/ghostty" "${HOME}/.config/ghostty"
+	fi
 fi
 
 echo "**** Please change Non-ASCII Font to Hack Nerd Font ****"
