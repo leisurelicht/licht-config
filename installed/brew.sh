@@ -19,10 +19,12 @@ packages=(
 	"bat"
 	"lazygit"
 	"pyenv"
+	"zoxide"
 	"trash"
 	"htop"
 	"bottom"
 	"nmap"
+	"uv"
 )
 
 casks=(
@@ -34,6 +36,13 @@ casks=(
 	"iterm2"
 	"devtoys"
 	"cursor"
+	"ghostty"
+	"obsidian"
+	"claude-code"
+	"geph"
+	"visual-studio-code"
+	"codex"
+	"codex-app"
 	"codeisland"
 	"masscode"
 )
