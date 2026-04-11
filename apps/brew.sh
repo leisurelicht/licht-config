@@ -2,9 +2,17 @@
 
 set -e
 
+mode="${1}"
+
 if ! command -v brew >/dev/null 2>&1; then
 	echo "Error: Homebrew is not installed"
 	echo "Install it from: https://brew.sh"
+	exit 1
+fi
+
+if [[ "${mode}" != "all" && "${mode}" != "formula" && "${mode}" != "cask" ]]; then
+	echo "Error: Unknown mode: ${mode}"
+	echo "Usage: ./apps/brew.sh [all|formula|cask]"
 	exit 1
 fi
 
@@ -48,30 +56,34 @@ casks=(
 	"masscode"
 )
 
-echo "Installing ${#packages[@]} packages..."
+if [[ "${mode}" == "all" || "${mode}" == "formula" ]]; then
+	echo "Installing ${#packages[@]} packages..."
 
-for pkg in "${packages[@]}"; do
-	if brew list --formula "$pkg" >/dev/null 2>&1; then
-		echo "[OK] $pkg already installed"
-	else
-		echo "[Installing] $pkg"
-		if ! brew install "$pkg"; then
-			echo "[Error] Failed to install $pkg"
+	for pkg in "${packages[@]}"; do
+		if brew list --formula "$pkg" >/dev/null 2>&1; then
+			echo "[OK] $pkg already installed"
+		else
+			echo "[Installing] $pkg"
+			if ! brew install "$pkg"; then
+				echo "[Error] Failed to install $pkg"
+			fi
 		fi
-	fi
-done
+	done
+fi
 
-echo "Installing ${#casks[@]} casks..."
+if [[ "${mode}" == "all" || "${mode}" == "cask" ]]; then
+	echo "Installing ${#casks[@]} casks..."
 
-for cask in "${casks[@]}"; do
-	if brew list --cask "$cask" >/dev/null 2>&1; then
-		echo "[OK] $cask already installed"
-	else
-		echo "[Installing] $cask"
-		if ! brew install --cask "$cask"; then
-			echo "[Error] Failed to install $cask"
+	for cask in "${casks[@]}"; do
+		if brew list --cask "$cask" >/dev/null 2>&1; then
+			echo "[OK] $cask already installed"
+		else
+			echo "[Installing] $cask"
+			if ! brew install --cask "$cask"; then
+				echo "[Error] Failed to install $cask"
+			fi
 		fi
-	fi
-done
+	done
+fi
 
 echo "Done!"
