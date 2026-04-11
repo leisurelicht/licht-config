@@ -34,7 +34,7 @@ remove_fzf_custom_config() {
 	fi
 }
 
-commands=("all" "zsh" "tmux" "vim" "neovim")
+commands=("all" "zsh" "tmux" "vim" "neovim" "ghostty")
 command_found=0
 for command in "${commands[@]}"; do
 	if [[ "${command}" == "${1}" ]]; then
@@ -46,7 +46,7 @@ done
 # 判断第一个命令行参数是否是 commands 中的一个
 if [[ ${command_found} -ne 1 ]]; then
 	echo "====> Error: Unknown parameter: ${1}"
-	echo "====> Usage: ./uninstall.sh [all|zsh|tmux|vim|neovim]"
+	echo "====> Usage: ./uninstall.sh [all|zsh|tmux|vim|neovim|ghostty]"
 	exit 1
 fi
 
@@ -170,5 +170,30 @@ if [[ "${1}" == "all" || "${1}" == "zsh" ]]; then
 		fi
 
 		echo '====> Uninstall zsh config success'
+	fi
+fi
+
+if [[ "${1}" == "all" || "${1}" == "ghostty" ]]; then
+	if [ -h ~/.config/ghostty ]; then
+		echo '====> Uninstall ghostty'
+	else
+		echo '====> No ghostty'
+		if [[ "${1}" == "ghostty" ]]; then
+			exit 0
+		fi
+	fi
+
+	if [ -h ~/.config/ghostty ]; then
+		echo '====> Remove ghostty config'
+		rm -r ~/.config/ghostty >/dev/null 2>&1
+
+		if [[ -d "${config_path}/bak/ghostty_bak" ]]; then
+			echo '====> Move ghostty folder back'
+			if [[ ! -d ~/.config/ghostty ]]; then
+				mv "${config_path}"/bak/ghostty_bak ~/.config/ghostty >/dev/null 2>&1
+			fi
+		fi
+
+		echo '====> Uninstall ghostty config success'
 	fi
 fi
