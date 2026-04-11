@@ -5,6 +5,17 @@ fail() {
 	exit 1
 }
 
+print_error_banner() {
+	local message=$1
+	local width=60
+	local line
+
+	line=$(printf '%*s' "${width}" '' | tr ' ' '=')
+	printf '%s\n' "${line}" >&2
+	printf '%*s\n' "$(((${width} + ${#message}) / 2))" "${message}" >&2
+	printf '%s\n\n' "${line}" >&2
+}
+
 fzf_config_start="# Fzf Custom Config"
 fzf_config_end="# End Fzf Custom Config"
 
@@ -40,6 +51,27 @@ EOF
 
 has() {
 	command -v "$1" >/dev/null 2>&1
+}
+
+parse_flags() {
+	local arg
+	local positional=()
+
+	for arg in "$@"; do
+		case "${arg}" in
+		--*)
+			print_error_banner "ERROR: Unknown option: ${arg}"
+			print_usage
+			exit 1
+			;;
+		*)
+			positional+=("${arg}")
+			;;
+		esac
+	done
+
+	# shellcheck disable=SC2124
+	ARGS=("${positional[@]}")
 }
 
 uninstall_apps() {
@@ -201,6 +233,12 @@ move_path() {
 		fail "Failed to move ${description} from [ ${source_path} ] to [ ${target_path} ]."
 	fi
 }
+
+primary=${1:-}
+secondary=${2:-}
+
+parse_flags "$@"
+set -- "${ARGS[@]}"
 
 primary=${1:-}
 secondary=${2:-}
