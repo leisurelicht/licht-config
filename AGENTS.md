@@ -10,6 +10,9 @@ Personal dotfiles repository for managing shell, editor, and terminal configurat
 .
 ├── install.sh          # Main installation script
 ├── uninstall.sh        # Uninstallation script
+├── apps/               # Helper install scripts
+│   ├── brew.sh         # Brew formula/cask installer
+│   └── for_claude.sh   # Claude-related setup
 ├── configs/            # Dotfile configurations
 │   ├── zsh/            # Zsh configuration
 │   │   ├── zshrc       # Main zsh config (sourced via symlink)
@@ -24,8 +27,6 @@ Personal dotfiles repository for managing shell, editor, and terminal configurat
 │   │   ├── vim/vimrc   # Vim config
 │   │   └── nvim/       # Neovim config (git submodule)
 │   └── ghostty/        # Ghostty configuration
-├── installed/          # Helper scripts
-│   └── brew_install.sh
 └── backups/            # Backup directory (gitignored)
 ```
 
@@ -34,23 +35,23 @@ Personal dotfiles repository for managing shell, editor, and terminal configurat
 ### Installation
 
 ```bash
-./install.sh [all|zsh|tmux|vim|neovim]
+./install.sh [all|zsh|tmux|vim|neovim|ghostty]
 ```
 
 ### Uninstallation
 
 ```bash
-./uninstall.sh [all|zsh|tmux|vim|neovim]
+./uninstall.sh [all|zsh|tmux|vim|neovim|ghostty]
 ```
 
 ### Linting
 
 ```bash
 # Shell scripts
-shellcheck install.sh uninstall.sh installed/*.sh
+shellcheck install.sh uninstall.sh apps/*.sh
 
 # Shell format (if shfmt installed)
-shfmt -d install.sh uninstall.sh
+shfmt -d install.sh uninstall.sh apps/*.sh
 ```
 
 ### Prerequisites
@@ -113,8 +114,11 @@ docs: update README installation instructions
    - `~/.tmux.conf` → `./configs/tmux/tmux.conf`
    - `~/.vimrc` → `./configs/vi/vim/vimrc`
    - `~/.config/nvim` → `./configs/vi/nvim`
+   - `~/.config/ghostty` → `./configs/ghostty`
    - `~/.p10k.zsh` → `./configs/zsh/p10k.zsh`
 
 4. **Platform support**: Primary target is macOS, with Linux support for most features
 
-5. **Do not review** `configs/vi/nvim/` directory (external submodule)
+5. **Submodule setup**: fresh clones that need Neovim config should use `git submodule update --init --recursive`
+
+6. **Do not review** `configs/vi/nvim/` directory (external submodule)

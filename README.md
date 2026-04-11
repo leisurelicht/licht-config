@@ -25,18 +25,18 @@
     </a>
 </div>
 
-## What this repository doing
+## What this repository does
 
-- manage, save my computer environment and soft config
-
-- Primarily for macOS, and sometimes use on ubuntu.
-
-- Include
-  - tmux configurations
-  - a simple vim configurations in one file
-  - a custom neovim configurations base on [LazyVim](https://github.com/LazyVim/LazyVim).
-  - zsh configurations
-  - the installation and uninstallation script for all the configurations mentioned above
+- Manage shell, terminal, editor, and app configuration in one repo.
+- Primarily for macOS, with partial Linux support.
+- Includes:
+  - Zsh configuration
+  - Tmux configuration
+  - Vim configuration
+  - Neovim configuration based on [LazyVim](https://github.com/LazyVim/LazyVim)
+  - Ghostty configuration
+  - Install and uninstall scripts
+  - Helper scripts under `apps/`
 
 ## File structure
 
@@ -47,7 +47,6 @@
 ├── LICENSE
 ├── README.md
 └── configs // tmux, vim, neovim, zsh, ghostty configuration
-
 ```
 
 ## Usage
@@ -56,6 +55,8 @@
 
 ```bash
 git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
+cd .licht-config
+git submodule update --init --recursive
 ```
 
 ### Zsh
@@ -86,9 +87,7 @@ git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
    ├── aliasrc // command aliasrc
    ├── export_env // environment
    ├── fzf.zsh // fzf configuration file
-   ├── install.sh
    ├── p10k.zsh // p10k configuration file
-   ├── README.md
    └── zshrc // zsh configuration file
 ```
 
@@ -119,7 +118,7 @@ git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
 
   3. only install mini tmux config
 
-  ```
+  ```bash
   curl -o ~/.tmux.conf https://raw.githubusercontent.com/leisurelicht/.licht-config/master/configs/tmux/mini.conf
   ```
 
@@ -132,12 +131,10 @@ git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
 
 #### File structure
 
-  ``` shell
-  .
-  ├── install.sh // install script
-  ├── README.md
-  ├── tmux.conf // tmux configuration
-  └── uninstall.sh // uninstall configuration
+  ```text
+  configs/tmux
+  ├── mini.conf // minimal tmux configuration
+  └── tmux.conf // main tmux configuration
   ```
 
 #### Common key mapping
@@ -220,10 +217,17 @@ git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
   ./uninstall.sh [vim/neovim]
   ```
 
+- ghostty
+
+  ```bash
+  ./install.sh ghostty
+  ./uninstall.sh ghostty
+  ```
+
 #### File structure
 
 ```text
-.
+configs/vi
 ├── nvim
 │  ├── ftplugin
 │  ├── init.lua
@@ -235,5 +239,13 @@ git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
    ├── config
    ├── custom
    ├── extends
+   ├── mini
    └── vimrc
+```
+
+### Helper scripts
+
+```bash
+./apps/brew.sh
+./apps/for_claude.sh
 ```
