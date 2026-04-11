@@ -282,7 +282,9 @@ print_usage() {
 	cat <<'EOF'
 Usage:
   ./install.sh all
-  ./install.sh apps <brew|claude|all> <brew_mode>
+  ./install.sh apps brew <brew_mode>
+  ./install.sh apps all <brew_mode>
+  ./install.sh apps claude
   ./install.sh configs <all|zsh|tmux|vim|neovim|ghostty>
 
 Options:

@@ -18,7 +18,8 @@ print_usage() {
 Usage:
   ./uninstall.sh all
   ./uninstall.sh configs <all|zsh|tmux|vim|neovim|ghostty>
-  ./uninstall.sh apps <brew|claude> <brew_mode>
+  ./uninstall.sh apps brew <brew_mode>
+  ./uninstall.sh apps claude
 
 Options:
   brew_mode: all | formula | cask
@@ -26,7 +27,7 @@ Options:
 Examples:
   ./uninstall.sh configs zsh
   ./uninstall.sh apps brew cask
-  ./uninstall.sh apps claude all
+  ./uninstall.sh apps claude
 EOF
 }
 
