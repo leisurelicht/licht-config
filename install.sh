@@ -15,11 +15,51 @@ brew_has() {
 	brew list --formula -1 "$1" >/dev/null 2>&1
 }
 
+brew_cask_has() {
+	brew list --cask "$1" >/dev/null 2>&1
+}
+
 ensure_dir_exists() {
 	local dir_path=$1
 
 	if [[ ! -d "${dir_path}" ]] && ! mkdir -p "${dir_path}"; then
 		fail "Failed to create directory [ ${dir_path} ]."
+	fi
+}
+
+ensure_brew_formula() {
+	local formula_name=$1
+
+	if brew_has "${formula_name}"; then
+		echo "====> [ ${formula_name} ] has been installed."
+	else
+		echo "----> Install [ ${formula_name} ]."
+		if ! brew install "${formula_name}"; then
+			fail "Failed to install brew formula [ ${formula_name} ]."
+		fi
+	fi
+}
+
+ensure_brew_cask() {
+	local cask_name=$1
+
+	if brew_cask_has "${cask_name}"; then
+		echo "====> [ ${cask_name} ] has been installed."
+	else
+		echo "----> Install [ ${cask_name} ]."
+		if ! brew install --cask "${cask_name}"; then
+			fail "Failed to install brew cask [ ${cask_name} ]."
+		fi
+	fi
+}
+
+ensure_brew_tap() {
+	local tap_name=$1
+
+	if ! brew tap | grep -q "^${tap_name}$"; then
+		if ! brew tap "${tap_name}"; then
+			fail "Failed to add brew tap [ ${tap_name} ]."
+		fi
 	fi
 }
 
@@ -91,29 +131,21 @@ ensure_dir_symlink() {
 install_on_mac() {
 	if ! has brew; then
 		echo "====> [ brew ] is not installed, Start To install."
-		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+		if ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+			fail "Failed to install Homebrew."
+		fi
 	fi
 
-	if ! brew_has git; then
-		echo "----> Install [ git ]."
-		brew install git
-	fi
+	ensure_brew_formula git
 
 	if [[ ${zsh} == 1 ]]; then
 		installed=("lua" "zsh" "git" "fzf" "zoxide" "ripgrep" "bat" "trash" "fd" "eza")
 
 		for soft in "${installed[@]}"; do
-			if brew_has "${soft}"; then
-				echo "====> [ ${soft} ] has been installed."
-			else
-				echo "----> Install [${soft}]."
-				brew install "${soft}"
-			fi
+			ensure_brew_formula "${soft}"
 		done
 
-		if ! brew list --cask font-hack-nerd-font >/dev/null 2>&1; then
-			brew install --cask font-hack-nerd-font
-		fi
+		ensure_brew_cask font-hack-nerd-font
 
 		if [[ ! -e "${HOME}/.fzf.zsh" ]]; then
 			"$(brew --prefix fzf)"/install
@@ -121,25 +153,15 @@ install_on_mac() {
 	fi
 
 	if [[ ${tmux} == 1 ]]; then
-		if ! brew_has tmux; then
-			echo "----> Install [ tmux ]."
-			brew install tmux
-		fi
+		ensure_brew_formula tmux
 	fi
 
 	if [[ ${vim} == 1 ]]; then
 		installed=("vim" "im-select" "curl")
-		if ! brew tap | grep -q "daipeihust/tap"; then
-			brew tap daipeihust/tap
-		fi
+		ensure_brew_tap daipeihust/tap
 
 		for soft in "${installed[@]}"; do
-			if brew_has "${soft}"; then
-				echo "====> [ ${soft} ] has been installed."
-			else
-				echo "----> Install [ ${soft} ]."
-				brew install "${soft}"
-			fi
+			ensure_brew_formula "${soft}"
 		done
 	fi
 
@@ -156,17 +178,10 @@ install_on_mac() {
 			"wget" "wget"
 			"gnu-sed" "gnu-sed"
 		)
-		if ! brew tap | grep -q "daipeihust/tap"; then
-			brew tap daipeihust/tap
-		fi
+		ensure_brew_tap daipeihust/tap
 
 		for ((i = 0; i < "${#installed[@]}"; )); do
-			if brew_has "${installed[$i + 1]}"; then
-				echo "====> [ ${installed[$i + 1]} ] has been installed."
-			else
-				echo "----> Install [ ${installed[$i + 1]} ]."
-				brew install "${installed[$i + 1]}"
-			fi
+			ensure_brew_formula "${installed[$i + 1]}"
 			i=$((i + 2))
 		done
 	fi
