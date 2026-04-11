@@ -4,6 +4,18 @@ has() {
 	command -v "$1" >/dev/null 2>&1
 }
 
+DRY_RUN=0
+NO_PLUGINS=0
+NO_SHELL_CHANGE=0
+
+run_cmd() {
+	if [[ ${DRY_RUN} -eq 1 ]]; then
+		echo "DRY-RUN: $*"
+		return 0
+	fi
+	"$@"
+}
+
 fail() {
 	echo "====> Error: $1"
 	exit 1
@@ -13,17 +25,23 @@ fzf_config_start="# Fzf Custom Config"
 fzf_config_end="# End Fzf Custom Config"
 
 brew_has() {
+	if ! has brew; then
+		return 1
+	fi
 	brew list --formula -1 "$1" >/dev/null 2>&1
 }
 
 brew_cask_has() {
+	if ! has brew; then
+		return 1
+	fi
 	brew list --cask "$1" >/dev/null 2>&1
 }
 
 ensure_dir_exists() {
 	local dir_path=$1
 
-	if [[ ! -d "${dir_path}" ]] && ! mkdir -p "${dir_path}"; then
+	if [[ ! -d "${dir_path}" ]] && ! run_cmd mkdir -p "${dir_path}"; then
 		fail "Failed to create directory [ ${dir_path} ]."
 	fi
 }
@@ -31,11 +49,19 @@ ensure_dir_exists() {
 ensure_brew_formula() {
 	local formula_name=$1
 
+	if ! has brew; then
+		if [[ ${DRY_RUN} -eq 1 ]]; then
+			echo "DRY-RUN: brew install ${formula_name}"
+			return 0
+		fi
+		fail "[ brew ] is not installed."
+	fi
+
 	if brew_has "${formula_name}"; then
 		echo "====> [ ${formula_name} ] has been installed."
 	else
 		echo "----> Install [ ${formula_name} ]."
-		if ! brew install "${formula_name}"; then
+		if ! run_cmd brew install "${formula_name}"; then
 			fail "Failed to install brew formula [ ${formula_name} ]."
 		fi
 	fi
@@ -44,11 +70,19 @@ ensure_brew_formula() {
 ensure_brew_cask() {
 	local cask_name=$1
 
+	if ! has brew; then
+		if [[ ${DRY_RUN} -eq 1 ]]; then
+			echo "DRY-RUN: brew install --cask ${cask_name}"
+			return 0
+		fi
+		fail "[ brew ] is not installed."
+	fi
+
 	if brew_cask_has "${cask_name}"; then
 		echo "====> [ ${cask_name} ] has been installed."
 	else
 		echo "----> Install [ ${cask_name} ]."
-		if ! brew install --cask "${cask_name}"; then
+		if ! run_cmd brew install --cask "${cask_name}"; then
 			fail "Failed to install brew cask [ ${cask_name} ]."
 		fi
 	fi
@@ -57,8 +91,16 @@ ensure_brew_cask() {
 ensure_brew_tap() {
 	local tap_name=$1
 
+	if ! has brew; then
+		if [[ ${DRY_RUN} -eq 1 ]]; then
+			echo "DRY-RUN: brew tap ${tap_name}"
+			return 0
+		fi
+		fail "[ brew ] is not installed."
+	fi
+
 	if ! brew tap | grep -Fxq "${tap_name}"; then
-		if ! brew tap "${tap_name}"; then
+		if ! run_cmd brew tap "${tap_name}"; then
 			fail "Failed to add brew tap [ ${tap_name} ]."
 		fi
 	fi
@@ -82,13 +124,13 @@ ensure_file_symlink() {
 			echo "${existing_message}"
 		fi
 		echo "====> Backup to [ ${config_path}/backups ] and delete it."
-		if ! mv "${target_path}" "${backup_path}"; then
+		if ! run_cmd mv "${target_path}" "${backup_path}"; then
 			fail "Failed to back up [ ${target_path} ] to [ ${backup_path} ]."
 		fi
 	fi
 
 	echo "${create_message}"
-	if ! ln -sf "${source_path}" "${target_path}"; then
+	if ! run_cmd ln -sf "${source_path}" "${target_path}"; then
 		fail "Failed to create symlink [ ${target_path} ] -> [ ${source_path} ]."
 	fi
 }
@@ -103,7 +145,7 @@ ensure_dir_symlink() {
 
 	if [[ -h "${target_path}" && ! -d "${target_path}" ]]; then
 		echo "====> ${link_label} dir is a link file, only delete it."
-		if ! rm -r "${target_path}"; then
+		if ! run_cmd rm -r "${target_path}"; then
 			fail "Failed to remove existing symlinked directory [ ${target_path} ]."
 		fi
 	elif [[ -d "${target_path}" ]]; then
@@ -114,7 +156,7 @@ ensure_dir_symlink() {
 			fi
 
 			echo "====> ${link_label} dir is a link file, only delete it."
-			if ! rm -r "${target_path}"; then
+			if ! run_cmd rm -r "${target_path}"; then
 				fail "Failed to remove existing symlinked directory [ ${target_path} ]."
 			fi
 		else
@@ -122,14 +164,14 @@ ensure_dir_symlink() {
 				echo "${existing_message}"
 			fi
 			echo "====> Backup to [ ${config_path}/backups ] and delete it."
-			if ! mv "${target_path}" "${backup_path}"; then
+			if ! run_cmd mv "${target_path}" "${backup_path}"; then
 				fail "Failed to back up [ ${target_path} ] to [ ${backup_path} ]."
 			fi
 		fi
 	fi
 
 	echo "${create_message}"
-	if ! ln -sf "${source_path}" "${target_path}"; then
+	if ! run_cmd ln -sf "${source_path}" "${target_path}"; then
 		fail "Failed to create symlink [ ${target_path} ] -> [ ${source_path} ]."
 	fi
 }
@@ -150,9 +192,14 @@ upsert_fzf_custom_config() {
 	fi
 
 	if [[ ! -f "${backup_file}" ]]; then
-		if ! cp "${target_file}" "${backup_file}"; then
+		if ! run_cmd cp "${target_file}" "${backup_file}"; then
 			fail "Failed to back up [ ${target_file} ]."
 		fi
+	fi
+
+	if [[ ${DRY_RUN} -eq 1 ]]; then
+		echo "DRY-RUN: update fzf custom block in ${target_file} from ${source_file}"
+		return
 	fi
 
 	start_line=$(grep -nFx "${fzf_config_start}" "${target_file}" | head -n 1 | cut -d: -f1)
@@ -182,7 +229,9 @@ upsert_fzf_custom_config() {
 install_on_mac() {
 	if ! has brew; then
 		echo "====> [ brew ] is not installed, Start To install."
-		if ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+		if [[ ${DRY_RUN} -eq 1 ]]; then
+			echo "DRY-RUN: install Homebrew"
+		elif ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
 			fail "Failed to install Homebrew."
 		fi
 	fi
@@ -199,7 +248,13 @@ install_on_mac() {
 		ensure_brew_cask font-hack-nerd-font
 
 		if [[ ! -e "${HOME}/.fzf.zsh" ]]; then
-			"$(brew --prefix fzf)"/install
+			if has brew; then
+				run_cmd "$(brew --prefix fzf)"/install
+			elif [[ ${DRY_RUN} -eq 1 ]]; then
+				echo "DRY-RUN: brew --prefix fzf && <prefix>/install"
+			else
+				fail "[ brew ] is not installed."
+			fi
 		fi
 	fi
 
@@ -332,6 +387,27 @@ log_root_path_once() {
 print_usage() {
 	cat <<'EOF'
 Usage:
+  ./install.sh [--dry-run] [--no-plugins] [--no-shell-change] all
+      Install all apps + all configs.
+
+  ./install.sh [--dry-run] [--no-plugins] [--no-shell-change] apps brew <brew_mode>
+      Install Homebrew formulae/casks from `apps/brew.sh`.
+
+  ./install.sh [--dry-run] [--no-plugins] [--no-shell-change] apps all
+      Install all scripts under `apps/`.
+
+  ./install.sh [--dry-run] [--no-plugins] [--no-shell-change] apps claude
+      Install Claude-related tooling from `apps/for_claude.sh`.
+
+  ./install.sh [--dry-run] [--no-plugins] [--no-shell-change] conf <all|zsh|tmux|vim|neovim|ghostty>
+      Install config symlinks + related setup.
+
+Options:
+  --dry-run         Print actions without changing files.
+  --no-plugins      Skip tmux/vim/nvim plugin installation steps.
+  --no-shell-change Skip `chsh` and `zsh -lc 'source ~/.zshrc'`.
+
+Compatibility:
   ./install.sh all
       Install all apps + all configs.
 
@@ -358,6 +434,38 @@ Examples:
 EOF
 }
 
+parse_flags() {
+	local arg
+	local positional=()
+
+	for arg in "$@"; do
+		case "${arg}" in
+		--dry-run)
+			DRY_RUN=1
+			;;
+		--no-plugins)
+			NO_PLUGINS=1
+			;;
+		--no-shell-change)
+			NO_SHELL_CHANGE=1
+			;;
+		--*)
+			echo "====> Error: Unknown option: ${arg}"
+			print_usage
+			exit 1
+			;;
+		*)
+			positional+=("${arg}")
+			;;
+		esac
+	done
+
+	set -- "${positional[@]}"
+	echo "====> Options: DRY_RUN=${DRY_RUN} NO_PLUGINS=${NO_PLUGINS} NO_SHELL_CHANGE=${NO_SHELL_CHANGE}"
+	# shellcheck disable=SC2124
+	ARGS=("$@")
+}
+
 install_apps() {
 	log_root_path_once
 
@@ -382,6 +490,9 @@ install_apps() {
 		;;
 	esac
 }
+
+parse_flags "$@"
+set -- "${ARGS[@]}"
 
 primary=${1:-}
 secondary=${2:-}
@@ -503,22 +614,26 @@ ensure_dir_exists "${config_path}/backups"
 if [[ ${tmux} == 1 ]]; then
 	echo "====> Install tmux plugins manage plugin tpm"
 	if [ ! -d ~/.tmux/plugins/tpm ]; then
-		tpm_created=0
-		if ! mkdir -p ~/.tmux/plugins; then
-			echo "====> Error: Failed to create ~/.tmux/plugins"
-			exit 1
-		fi
-		if [[ ! -e ~/.tmux/plugins/tpm && ! -L ~/.tmux/plugins/tpm ]]; then
-			tpm_created=1
-		fi
-		if ! git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm; then
-			if [[ ${tpm_created} -eq 1 ]]; then
-				rm -rf ~/.tmux/plugins/tpm >/dev/null 2>&1 || true
+		if [[ ${NO_PLUGINS} -eq 1 ]]; then
+			echo "====> Skip tmux plugin install (NO_PLUGINS=1)"
+		else
+			tpm_created=0
+			if ! run_cmd mkdir -p ~/.tmux/plugins; then
+				echo "====> Error: Failed to create ~/.tmux/plugins"
+				exit 1
 			fi
-			echo "====> Error: Download tpm failed, install stop"
-			exit 1
+			if [[ ! -e ~/.tmux/plugins/tpm && ! -L ~/.tmux/plugins/tpm ]]; then
+				tpm_created=1
+			fi
+			if ! run_cmd git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm; then
+				if [[ ${tpm_created} -eq 1 ]]; then
+					run_cmd rm -rf ~/.tmux/plugins/tpm >/dev/null 2>&1 || true
+				fi
+				echo "====> Error: Download tpm failed, install stop"
+				exit 1
+			fi
+			echo "====> Download tpm Succeed"
 		fi
-		echo "====> Download tpm Succeed"
 	fi
 
 	ensure_file_symlink \
@@ -541,8 +656,10 @@ if [[ ${vim} == 1 ]]; then
 
 	# 安装vim插件
 	echo "====> Install vim plugins"
-	if has vim; then
-		vim +PlugInstall +UpdateRemotePlugins +qa
+	if [[ ${NO_PLUGINS} -eq 1 ]]; then
+		echo "====> Skip vim plugin install (NO_PLUGINS=1)"
+	elif has vim; then
+		run_cmd vim +PlugInstall +UpdateRemotePlugins +qa
 	else
 		echo "====> Warning: vim not found, skip plugin install."
 	fi
@@ -559,21 +676,27 @@ if [[ ${neovim} == 1 ]]; then
 
 	# 安装neovim插件
 	echo "====> Install nvim plugins"
-	if has nvim; then
-		nvim +Lazy +qa
+	if [[ ${NO_PLUGINS} -eq 1 ]]; then
+		echo "====> Skip nvim plugin install (NO_PLUGINS=1)"
+	elif has nvim; then
+		run_cmd nvim +Lazy +qa
 	else
 		echo "====> Warning: nvim not found, skip plugin install."
 	fi
 
 fi
 
-if [[ ${zsh} == 1 ]]; then
-	# golang version manager
+	if [[ ${zsh} == 1 ]]; then
+		# golang version manager
 	if ! has "g"; then
 		echo "----> Install [ g ]."
-		if ! curl -sSL https://raw.githubusercontent.com/voidint/g/master/install.sh | bash; then
-			echo "====> Error: Install g failed"
-			exit 1
+		if [[ ${DRY_RUN} -eq 1 ]]; then
+			echo "DRY-RUN: curl -sSL https://raw.githubusercontent.com/voidint/g/master/install.sh | bash"
+		else
+			if ! curl -sSL https://raw.githubusercontent.com/voidint/g/master/install.sh | bash; then
+				echo "====> Error: Install g failed"
+				exit 1
+			fi
 		fi
 	fi
 
@@ -582,9 +705,13 @@ if [[ ${zsh} == 1 ]]; then
 		echo "====> NVM already installed, skipping."
 	else
 		echo "====> Installing NVM..."
-		if ! curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash; then
-			echo "====> Error: Install NVM failed"
-			exit 1
+		if [[ ${DRY_RUN} -eq 1 ]]; then
+			echo "DRY-RUN: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash"
+		else
+			if ! curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash; then
+				echo "====> Error: Install NVM failed"
+				exit 1
+			fi
 		fi
 	fi
 
@@ -592,14 +719,18 @@ if [[ ${zsh} == 1 ]]; then
 	if [[ -f "${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git/zinit.zsh" ]]; then
 		echo "====> Zinit already installed, skipping."
 	else
-		if ! bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"; then
-			echo "====> Error: Install zinit failed, install stop"
-			exit 1
-		fi
+		if [[ ${DRY_RUN} -eq 1 ]]; then
+			echo "DRY-RUN: install zinit via curl | bash"
+		else
+			if ! bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"; then
+				echo "====> Error: Install zinit failed, install stop"
+				exit 1
+			fi
 
-		if [[ ! -f "${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git/zinit.zsh" ]]; then
-			echo "====> Error: Zinit was not installed correctly, install stop"
-			exit 1
+			if [[ ! -f "${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git/zinit.zsh" ]]; then
+				echo "====> Error: Zinit was not installed correctly, install stop"
+				exit 1
+			fi
 		fi
 	fi
 
@@ -633,11 +764,19 @@ if [[ ${zsh} == 1 ]]; then
 	if [[ "${current_shell}" == "zsh" ]]; then
 		echo "====> Already using zsh, skipping."
 	else
-		if ! chsh -s /bin/zsh; then
-			echo "====> Warning: Failed to change shell to zsh. You may need to do it manually."
+		if [[ ${NO_SHELL_CHANGE} -eq 1 ]]; then
+			echo "====> Skip shell change (NO_SHELL_CHANGE=1)"
+		else
+			if ! run_cmd chsh -s /bin/zsh; then
+				echo "====> Warning: Failed to change shell to zsh. You may need to do it manually."
+			fi
 		fi
 	fi
-	zsh -lc 'source ~/.zshrc'
+	if [[ ${NO_SHELL_CHANGE} -eq 1 ]]; then
+		echo "====> Skip sourcing zshrc (NO_SHELL_CHANGE=1)"
+	else
+		run_cmd zsh -lc 'source ~/.zshrc'
+	fi
 fi
 
 if [[ ${ghostty} == 1 ]]; then
