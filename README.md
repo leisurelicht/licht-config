@@ -38,6 +38,8 @@
   - Install and uninstall scripts
   - Helper scripts under `apps/`
 
+> Note: the Neovim configuration under `configs/vi/nvim` is no longer actively maintained in this repository.
+
 ## File structure
 
 ```text
@@ -194,6 +196,8 @@ git submodule update --init --recursive
 ----
 
 ### Vim && Neovim
+
+> Note: `configs/vi/nvim` is kept for existing setups, but it is no longer actively updated in this repository.
 
 #### Usage
 

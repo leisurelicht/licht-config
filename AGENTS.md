@@ -95,6 +95,9 @@ If you move or rename anything under `configs/`, check all of:
 
 `configs/vi/nvim` is a git submodule.
 
+The Neovim configuration is no longer actively updated in this repo.
+Treat it as frozen unless the user explicitly asks for a submodule-related change.
+
 If its path changes, you must update both:
 - `.gitmodules`
 - the git index gitlink entry
@@ -141,6 +144,7 @@ If files under `apps/` are renamed or added, update:
 ## Do Not Touch By Default
 
 - Do not review or edit `configs/vi/nvim/` contents unless the user explicitly asks.
+- Do not proactively modernize, refactor, or update the Neovim configuration.
 - Do not change submodule contents when the task is only about path/layout/doc updates.
 - Do not modify files under `$HOME` as part of a repo-only change unless the user explicitly asks to run install/uninstall behavior.
 - Do not convert shell indentation away from tabs unless the file is already being reformatted intentionally.
