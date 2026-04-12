@@ -6,6 +6,8 @@ script_dir=$(
 )
 # shellcheck source=lib/log.sh
 source "${script_dir}/lib/log.sh"
+# shellcheck source=apps/brew_lists.sh
+source "${script_dir}/apps/brew_lists.sh"
 
 fail() {
 	log_error "$1"
@@ -44,7 +46,7 @@ Usage:
       Remove managed symlinks and restore backups.
 
   ./uninstall.sh --apps brew <brew_mode>
-      Uninstall Homebrew formulae/casks listed in `apps/brew.sh`.
+      Uninstall Homebrew formulae/casks listed in `apps/brew_lists.sh`.
 
   ./uninstall.sh --apps claude
       Uninstall `dippy` and untap `ldayton/dippy`.
@@ -113,52 +115,14 @@ uninstall_apps() {
 			exit 0
 		fi
 
-		packages=(
-			"mycli"
-			"wget"
-			"git"
-			"tig"
-			"cloc"
-			"ctop"
-			"gibo"
-			"bat"
-			"lazygit"
-			"zoxide"
-			"trash"
-			"htop"
-			"bottom"
-			"nmap"
-			"uv"
-		)
-
-		casks=(
-			"google-chrome"
-			"cheatsheet"
-			"itsycal"
-			"browserosaurus"
-			"thor"
-			"iterm2"
-			"spotify"
-			"devtoys"
-			"ghostty"
-			"obsidian"
-			"claude-code"
-			"geph"
-			"visual-studio-code"
-			"codex"
-			"codex-app"
-			"codeisland"
-			"masscode"
-		)
-
-		if [[ "${brew_mode}" != "all" && "${brew_mode}" != "formula" && "${brew_mode}" != "cask" ]]; then
+		if ! is_valid_brew_mode "${brew_mode}"; then
 			log_error "Unknown brew mode: ${brew_mode}"
 			print_usage
 			exit 1
 		fi
 
 		if [[ "${brew_mode}" == "all" || "${brew_mode}" == "formula" ]]; then
-			for pkg in "${packages[@]}"; do
+			for pkg in "${BREW_PACKAGES[@]}"; do
 				if brew list --formula "$pkg" >/dev/null 2>&1; then
 					log_step "Uninstall brew formula [ ${pkg} ]"
 					brew uninstall "$pkg" >/dev/null 2>&1 || true
@@ -167,7 +131,7 @@ uninstall_apps() {
 		fi
 
 		if [[ "${brew_mode}" == "all" || "${brew_mode}" == "cask" ]]; then
-			for cask in "${casks[@]}"; do
+			for cask in "${BREW_CASKS[@]}"; do
 				if brew list --cask "$cask" >/dev/null 2>&1; then
 					log_step "Uninstall brew cask [ ${cask} ]"
 					brew uninstall --cask "$cask" >/dev/null 2>&1 || true

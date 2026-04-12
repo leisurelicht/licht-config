@@ -284,4 +284,6 @@ configs/vi
 ```bash
 ./apps/brew.sh
 ./apps/for_claude.sh
+# shared source of formula/cask lists
+./apps/brew_lists.sh
 ```

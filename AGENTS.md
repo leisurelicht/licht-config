@@ -49,6 +49,7 @@ This repo is primarily a symlink-based config installer:
 
 ```bash
 ./apps/brew.sh
+./apps/brew_lists.sh
 ./apps/check.sh
 ./apps/for_claude.sh
 ```
@@ -189,10 +190,11 @@ For any path/layout/script change, the work is not complete until all relevant i
 
 ### Add a brew package or app
 
-1. Edit `apps/brew.sh`.
-2. Put formulae in `packages`.
-3. Put GUI apps / casks in `casks`.
-4. Keep the list changes scoped; do not reshuffle unrelated entries.
+1. Edit `apps/brew_lists.sh`.
+2. Put formulae in `BREW_PACKAGES`.
+3. Put GUI apps / casks in `BREW_CASKS`.
+4. If an item needs a tap first, add a rule in `BREW_TAP_RULES` (`type:name:tap`).
+5. Keep the list changes scoped; do not reshuffle unrelated entries.
 
 ### Review this repo
 

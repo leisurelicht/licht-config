@@ -24,6 +24,7 @@ check_shell_syntax() {
 	bash -n "${repo_root}/install.sh"
 	bash -n "${repo_root}/uninstall.sh"
 	bash -n "${repo_root}/apps/brew.sh"
+	bash -n "${repo_root}/apps/brew_lists.sh"
 	bash -n "${repo_root}/apps/for_claude.sh"
 }
 
