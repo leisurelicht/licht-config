@@ -62,6 +62,7 @@ CFG_GHOSTTY=1
 MENU_RESULT=0
 MENU_BACK=0
 MENU_QUIT=0
+OS_DISPLAY=""
 
 action_label() {
 	if [[ "${ACTION}" == "uninstall" ]]; then
@@ -83,6 +84,30 @@ read_key() {
 
 clear_screen() {
 	printf '\033c'
+}
+
+detect_os_display() {
+	local os_name
+	local os_kernel
+
+	os_name=$(uname -s 2>/dev/null || echo "Unknown")
+	os_kernel=$(uname -r 2>/dev/null || echo "")
+
+	case "${os_name}" in
+	Darwin)
+		if command -v sw_vers >/dev/null 2>&1; then
+			printf 'macOS %s (Darwin %s)' "$(sw_vers -productVersion 2>/dev/null)" "${os_kernel}"
+		else
+			printf 'macOS (Darwin %s)' "${os_kernel}"
+		fi
+		;;
+	Linux)
+		printf 'Linux %s' "${os_kernel}"
+		;;
+	*)
+		printf '%s %s' "${os_name}" "${os_kernel}"
+		;;
+	esac
 }
 
 print_banner() {
@@ -144,13 +169,20 @@ print_frame_header() {
 	local subtitle=$2
 	local current_step=$3
 	local mode_color="${C_ACCENT}"
+	local os_line_plain
+	local content_width=78
+	local pad=0
 
 	if [[ "${ACTION}" == "uninstall" ]]; then
 		mode_color="${C_WARN}"
 	fi
+	os_line_plain="OS: ${OS_DISPLAY}"
+	if [[ ${#os_line_plain} -lt ${content_width} ]]; then
+		pad=$(((content_width - ${#os_line_plain}) / 2))
+	fi
 
 	printf "%b╭──────────────────────────────────────────────────────────────────────────────╮%b\n" "${C_DIM}" "${C_RESET}"
-	printf "%b│%-78s│%b\n" "${C_DIM}" "" "${C_RESET}"
+	printf "%b│%*s%-*s│%b\n" "${C_DIM}" "${pad}" "" "$((content_width - pad))" "${os_line_plain}" "${C_RESET}"
 	printf "%b├──────────────────────────────────────────────────────────────────────────────┤%b\n" "${C_DIM}" "${C_RESET}"
 	printf "  %b%s%b · %s\n\n" "${mode_color}" "${title}" "${C_RESET}" "${subtitle}"
 	print_workflow "${current_step}"
@@ -657,4 +689,5 @@ main_loop() {
 	done
 }
 
+OS_DISPLAY=$(detect_os_display)
 main_loop
