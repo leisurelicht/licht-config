@@ -511,6 +511,10 @@ SCRIPT_START_SECONDS=${SECONDS}
 parse_flags "$@"
 set -- "${ARGS[@]}"
 
+zsh=0 tmux=0 vim=0 neovim=0 ghostty=0
+os_name=$(uname -s)
+platform_ready=0
+
 orig_primary=${1:-}
 primary=${1:-}
 secondary=${2:-}
@@ -551,6 +555,15 @@ if [[ "${primary}" == "all" ]]; then
 		exit 1
 	fi
 
+	if [[ ${os_name} == 'Darwin' ]]; then
+		# Ensure brew exists before running app installers on a blank macOS system.
+		zsh=1 tmux=1 vim=1 neovim=1 ghostty=1
+		log_section "Install platform dependencies (macOS)"
+		log_root_path_once
+		install_on_mac
+		platform_ready=1
+	fi
+
 	install_apps "brew" "all"
 	install_apps "claude"
 
@@ -564,6 +577,14 @@ if [[ "${primary}" == "apps" ]]; then
 	if [[ -z "${secondary}" ]]; then
 		print_usage
 		exit 0
+	fi
+
+	if [[ ${os_name} == 'Darwin' ]]; then
+		# For apps-only installs, bootstrap brew first on blank macOS.
+		log_section "Install platform dependencies (macOS)"
+		log_root_path_once
+		install_on_mac
+		platform_ready=1
 	fi
 
 	case "${secondary}" in
@@ -618,8 +639,6 @@ if [[ ${command_found} -ne 1 ]]; then
 	exit 1
 fi
 
-zsh=0 tmux=0 vim=0 neovim=0 ghostty=0
-
 case ${1} in
 all)
 	zsh=1 tmux=1 vim=1 neovim=1 ghostty=1
@@ -641,15 +660,16 @@ ghostty)
 	;;
 esac
 
-os_name=$(uname -s)
-if [[ ${os_name} == 'Darwin' ]]; then
-	log_section "Install platform dependencies (macOS)"
-	log_root_path_once
-	install_on_mac
-elif [[ ${os_name} == 'Linux' ]]; then
-	log_section "Install platform dependencies (Linux)"
-	log_root_path_once
-	install_on_linux
+if [[ ${platform_ready} -eq 0 ]]; then
+	if [[ ${os_name} == 'Darwin' ]]; then
+		log_section "Install platform dependencies (macOS)"
+		log_root_path_once
+		install_on_mac
+	elif [[ ${os_name} == 'Linux' ]]; then
+		log_section "Install platform dependencies (Linux)"
+		log_root_path_once
+		install_on_linux
+	fi
 fi
 
 ensure_dir_exists "${HOME}/.config"
