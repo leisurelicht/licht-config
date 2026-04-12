@@ -224,7 +224,7 @@ menu_single() {
 			fi
 		done
 
-		print_frame_footer "[←] Back  [→] Next  [↑/↓] Navigate  [Enter] Confirm  [Q] Quit"
+		print_frame_footer "[←/→] Move  [↑/↓] Navigate  [Enter] Confirm  [Q] Quit"
 		key=$(read_key) || continue
 		case "${key}" in
 		$'\x1b[A'|k)
@@ -281,11 +281,25 @@ menu_apps_multi() {
 		done
 
 		if [[ ${APP_BREW} -eq 1 ]]; then
-			printf "\n  Brew mode: %b%s%b\n" "${C_ACCENT}" "${BREW_MODE}" "${C_RESET}"
-			printf "  Press %b%s%b to switch brew mode\n" "${C_TITLE}" "b" "${C_RESET}"
+			mode_all="all"
+			mode_formula="formula"
+			mode_cask="cask"
+			case "${BREW_MODE}" in
+			all)
+				mode_all=$(printf "%b[%s]%b" "${C_ACCENT}" " all " "${C_RESET}")
+				;;
+			formula)
+				mode_formula=$(printf "%b[%s]%b" "${C_ACCENT}" " formula " "${C_RESET}")
+				;;
+			cask)
+				mode_cask=$(printf "%b[%s]%b" "${C_ACCENT}" " cask " "${C_RESET}")
+				;;
+			esac
+			printf "\n  Brew mode  %s  %s  %s   ·   press %b%s%b\n" \
+				"${mode_all}" "${mode_formula}" "${mode_cask}" "${C_TITLE}" "b" "${C_RESET}"
 		fi
 
-		print_frame_footer "[←] Back  [→] Next  [↑/↓] Navigate  [Space] Toggle  [B] Brew mode"
+		print_frame_footer "[←/→] Move  [↑/↓] Navigate  [Space] Toggle  [Enter] Confirm  [Q] Quit"
 		key=$(read_key) || continue
 		case "${key}" in
 		$'\x1b[A'|k)
@@ -369,7 +383,7 @@ menu_configs_multi() {
 		selected_total=$((CFG_ZSH + CFG_TMUX + CFG_VIM + CFG_NEOVIM + CFG_GHOSTTY))
 		printf "\n  Selected: %b%s%b\n" "${C_ACCENT}" "${selected_total}" "${C_RESET}"
 
-		print_frame_footer "[←] Back  [→] Next  [↑/↓] Navigate  [Space] Toggle"
+		print_frame_footer "[←/→] Move  [↑/↓] Navigate  [Space] Toggle  [Enter] Confirm  [Q] Quit"
 		key=$(read_key) || continue
 		case "${key}" in
 		$'\x1b[A'|k)
@@ -482,7 +496,7 @@ print_preview() {
 	printf "  - configs/vi/nvim -> ~/.config/nvim\n"
 	printf "  - configs/ghostty -> ~/.config/ghostty\n"
 
-	print_frame_footer "[←] Back  [→] Next  [Enter] Continue  [Q] Quit"
+	print_frame_footer "[←/→] Move  [Enter] Confirm  [Q] Quit"
 }
 
 confirm_screen() {
@@ -512,7 +526,7 @@ confirm_screen() {
 			fi
 		done
 
-		print_frame_footer "[←] Back  [→] Next  [↑/↓] Navigate  [Enter] Select"
+		print_frame_footer "[←/→] Move  [↑/↓] Navigate  [Enter] Confirm  [Q] Quit"
 		key=$(read_key) || continue
 		case "${key}" in
 		$'\x1b[A'|k)
