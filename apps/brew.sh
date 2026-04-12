@@ -4,15 +4,24 @@ set -e
 
 mode="${1}"
 
+script_dir=$(
+	cd "$(dirname "${0}")" || exit
+	pwd
+)
+# shellcheck source=../lib/log.sh
+source "${script_dir}/../lib/log.sh"
+
+init_log_style
+
 if ! command -v brew >/dev/null 2>&1; then
-	echo "Error: Homebrew is not installed"
-	echo "Install it from: https://brew.sh"
+	log_error "Homebrew is not installed"
+	log_info "Install it from: https://brew.sh"
 	exit 1
 fi
 
 if [[ "${mode}" != "all" && "${mode}" != "formula" && "${mode}" != "cask" ]]; then
-	echo "Error: Unknown mode: ${mode}"
-	echo "Usage: ./apps/brew.sh [all|formula|cask]"
+	log_error "Unknown mode: ${mode}"
+	log_info "Usage: ./apps/brew.sh [all|formula|cask]"
 	exit 1
 fi
 
@@ -57,33 +66,33 @@ casks=(
 )
 
 if [[ "${mode}" == "all" || "${mode}" == "formula" ]]; then
-	echo "Installing ${#packages[@]} packages..."
+	log_info "Installing ${#packages[@]} packages..."
 
 	for pkg in "${packages[@]}"; do
 		if brew list --formula "$pkg" >/dev/null 2>&1; then
-			echo "[OK] $pkg already installed"
+			log_ok "$pkg already installed"
 		else
-			echo "[Installing] $pkg"
+			log_step "Installing $pkg"
 			if ! brew install "$pkg"; then
-				echo "[Error] Failed to install $pkg"
+				log_error "Failed to install $pkg"
 			fi
 		fi
 	done
 fi
 
 if [[ "${mode}" == "all" || "${mode}" == "cask" ]]; then
-	echo "Installing ${#casks[@]} casks..."
+	log_info "Installing ${#casks[@]} casks..."
 
 	for cask in "${casks[@]}"; do
 		if brew list --cask "$cask" >/dev/null 2>&1; then
-			echo "[OK] $cask already installed"
+			log_ok "$cask already installed"
 		else
-			echo "[Installing] $cask"
+			log_step "Installing $cask"
 			if ! brew install --cask "$cask"; then
-				echo "[Error] Failed to install $cask"
+				log_error "Failed to install $cask"
 			fi
 		fi
 	done
 fi
 
-echo "Done!"
+log_ok "Done"

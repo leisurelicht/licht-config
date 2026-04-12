@@ -1,5 +1,12 @@
 #!/bin/bash
 
+script_dir=$(
+	cd "$(dirname "${0}")" || exit
+	pwd
+)
+# shellcheck source=lib/log.sh
+source "${script_dir}/lib/log.sh"
+
 has() {
 	command -v "$1" >/dev/null 2>&1
 }
@@ -8,14 +15,14 @@ DRY_RUN=0
 
 run_cmd() {
 	if [[ ${DRY_RUN} -eq 1 ]]; then
-		echo "DRY-RUN: $*"
+		log_dry "$*"
 		return 0
 	fi
 	"$@"
 }
 
 fail() {
-	echo "====> Error: $1"
+	log_error "$1"
 	exit 1
 }
 
@@ -60,16 +67,16 @@ ensure_brew_formula() {
 
 	if ! has brew; then
 		if [[ ${DRY_RUN} -eq 1 ]]; then
-			echo "DRY-RUN: brew install ${formula_name}"
+			log_dry "brew install ${formula_name}"
 			return 0
 		fi
 		fail "[ brew ] is not installed."
 	fi
 
 	if brew_has "${formula_name}"; then
-		echo "====> [ ${formula_name} ] has been installed."
+		log_ok "[ ${formula_name} ] has been installed."
 	else
-		echo "----> Install [ ${formula_name} ]."
+		log_step "Install [ ${formula_name} ]."
 		if ! run_cmd brew install "${formula_name}"; then
 			fail "Failed to install brew formula [ ${formula_name} ]."
 		fi
@@ -81,16 +88,16 @@ ensure_brew_cask() {
 
 	if ! has brew; then
 		if [[ ${DRY_RUN} -eq 1 ]]; then
-			echo "DRY-RUN: brew install --cask ${cask_name}"
+			log_dry "brew install --cask ${cask_name}"
 			return 0
 		fi
 		fail "[ brew ] is not installed."
 	fi
 
 	if brew_cask_has "${cask_name}"; then
-		echo "====> [ ${cask_name} ] has been installed."
+		log_ok "[ ${cask_name} ] has been installed."
 	else
-		echo "----> Install [ ${cask_name} ]."
+		log_step "Install [ ${cask_name} ]."
 		if ! run_cmd brew install --cask "${cask_name}"; then
 			fail "Failed to install brew cask [ ${cask_name} ]."
 		fi
@@ -102,7 +109,7 @@ ensure_brew_tap() {
 
 	if ! has brew; then
 		if [[ ${DRY_RUN} -eq 1 ]]; then
-			echo "DRY-RUN: brew tap ${tap_name}"
+			log_dry "brew tap ${tap_name}"
 			return 0
 		fi
 		fail "[ brew ] is not installed."
@@ -125,20 +132,20 @@ ensure_file_symlink() {
 
 	if [[ ( -e "${target_path}" || -L "${target_path}" ) && ! -d "${target_path}" ]]; then
 		if [[ -L "${target_path}" && "$(readlink "${target_path}")" == "${source_path}" ]]; then
-			echo "====> ${link_label} symlink already exists and points to correct location."
+			log_ok "${link_label} symlink already exists and points to correct location."
 			return 1
 		fi
 
 		if [[ -n "${existing_message}" ]]; then
-			echo "${existing_message}"
+			log_info "${existing_message}"
 		fi
-		echo "====> Backup to [ ${config_path}/backups ] and delete it."
+		log_step "Backup to [ ${config_path}/backups ] and delete it."
 		if ! run_cmd mv "${target_path}" "${backup_path}"; then
 			fail "Failed to back up [ ${target_path} ] to [ ${backup_path} ]."
 		fi
 	fi
 
-	echo "${create_message}"
+	log_step "${create_message}"
 	if ! run_cmd ln -sf "${source_path}" "${target_path}"; then
 		fail "Failed to create symlink [ ${target_path} ] -> [ ${source_path} ]."
 	fi
@@ -153,33 +160,33 @@ ensure_dir_symlink() {
 	local create_message=$6
 
 	if [[ -h "${target_path}" && ! -d "${target_path}" ]]; then
-		echo "====> ${link_label} dir is a link file, only delete it."
+		log_step "${link_label} dir is a link file, only delete it."
 		if ! run_cmd rm -r "${target_path}"; then
 			fail "Failed to remove existing symlinked directory [ ${target_path} ]."
 		fi
 	elif [[ -d "${target_path}" ]]; then
 		if [[ -h "${target_path}" ]]; then
 			if [[ "$(readlink "${target_path}")" == "${source_path}" ]]; then
-				echo "====> ${link_label} symlink already exists and points to correct location."
+				log_ok "${link_label} symlink already exists and points to correct location."
 				return 1
 			fi
 
-			echo "====> ${link_label} dir is a link file, only delete it."
+			log_step "${link_label} dir is a link file, only delete it."
 			if ! run_cmd rm -r "${target_path}"; then
 				fail "Failed to remove existing symlinked directory [ ${target_path} ]."
 			fi
 		else
 			if [[ -n "${existing_message}" ]]; then
-				echo "${existing_message}"
+				log_info "${existing_message}"
 			fi
-			echo "====> Backup to [ ${config_path}/backups ] and delete it."
+			log_step "Backup to [ ${config_path}/backups ] and delete it."
 			if ! run_cmd mv "${target_path}" "${backup_path}"; then
 				fail "Failed to back up [ ${target_path} ] to [ ${backup_path} ]."
 			fi
 		fi
 	fi
 
-	echo "${create_message}"
+	log_step "${create_message}"
 	if ! run_cmd ln -sf "${source_path}" "${target_path}"; then
 		fail "Failed to create symlink [ ${target_path} ] -> [ ${source_path} ]."
 	fi
@@ -207,7 +214,7 @@ upsert_fzf_custom_config() {
 	fi
 
 	if [[ ${DRY_RUN} -eq 1 ]]; then
-		echo "DRY-RUN: update fzf custom block in ${target_file} from ${source_file}"
+		log_dry "update fzf custom block in ${target_file} from ${source_file}"
 		return
 	fi
 
@@ -237,9 +244,9 @@ upsert_fzf_custom_config() {
 
 install_on_mac() {
 	if ! has brew; then
-		echo "====> [ brew ] is not installed, Start To install."
+		log_step "[ brew ] is not installed, start to install."
 		if [[ ${DRY_RUN} -eq 1 ]]; then
-			echo "DRY-RUN: install Homebrew"
+			log_dry "install Homebrew"
 		elif ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
 			fail "Failed to install Homebrew."
 		fi
@@ -260,7 +267,7 @@ install_on_mac() {
 			if has brew; then
 				run_cmd "$(brew --prefix fzf)"/install
 			elif [[ ${DRY_RUN} -eq 1 ]]; then
-				echo "DRY-RUN: brew --prefix fzf && <prefix>/install"
+				log_dry "brew --prefix fzf && <prefix>/install"
 			else
 				fail "[ brew ] is not installed."
 			fi
@@ -317,7 +324,7 @@ install_on_linux() {
 
 		for ((i = 0; i < "${#installed[@]}"; )); do
 			if ! has "${installed[i]}"; then
-				echo "----> Please Install [ ${installed[i + 1]} ]."
+				log_warn "Please install [ ${installed[i + 1]} ]."
 				need_exit=1
 			fi
 			((i += 2))
@@ -332,7 +339,7 @@ install_on_linux() {
 
 		for ((i = 0; i < "${#installed[@]}"; )); do
 			if ! has "${installed[i]}"; then
-				echo "----> Please Install [ ${installed[i + 1]} ]."
+				log_warn "Please install [ ${installed[i + 1]} ]."
 				need_exit=1
 			fi
 			((i += 2))
@@ -347,7 +354,7 @@ install_on_linux() {
 
 		for ((i = 0; i < "${#installed[@]}"; )); do
 			if ! has "${installed[i]}"; then
-				echo "----> Please Install [ ${installed[i + 1]} ]."
+				log_warn "Please install [ ${installed[i + 1]} ]."
 				need_exit=1
 			fi
 			((i += 2))
@@ -367,7 +374,7 @@ install_on_linux() {
 
 		for ((i = 0; i < "${#installed[@]}"; )); do
 			if ! has "${installed[i]}"; then
-				echo "----> Please Install [ ${installed[i + 1]} ]."
+				log_warn "Please install [ ${installed[i + 1]} ]."
 				need_exit=1
 			fi
 			((i += 2))
@@ -380,15 +387,12 @@ install_on_linux() {
 
 # ------------------------------
 
-config_path=$(
-	cd "$(dirname "${0}")" || exit
-	pwd
-)
+config_path="${script_dir}"
 
 root_logged=0
 log_root_path_once() {
 	if [[ ${root_logged} -eq 0 ]]; then
-		echo "====> Config file root path is: ${config_path}"
+		log_info "Config file root path is: ${config_path}"
 		root_logged=1
 	fi
 }
@@ -463,7 +467,7 @@ parse_flags() {
 
 	set -- "${positional[@]}"
 	if [[ ${has_any_flag} -eq 1 ]]; then
-		echo "====> Options: DRY_RUN=${DRY_RUN}"
+		log_info "Options: DRY_RUN=${DRY_RUN}"
 	fi
 	# shellcheck disable=SC2124
 	ARGS=("$@")
@@ -477,23 +481,28 @@ install_apps() {
 
 	case "${app}" in
 	all)
+		log_section "Install apps: brew (${brew_mode}) + claude"
 		"${config_path}/apps/brew.sh" "${brew_mode}"
 		"${config_path}/apps/for_claude.sh"
 		;;
 	brew)
+		log_section "Install apps: brew (${brew_mode})"
 		"${config_path}/apps/brew.sh" "${brew_mode}"
 		;;
 	claude)
+		log_section "Install apps: claude"
 		"${config_path}/apps/for_claude.sh"
 		;;
 	*)
-		echo "====> Error: Unknown apps parameter: ${app}"
+		log_error "Unknown apps parameter: ${app}"
 		print_usage
 		exit 1
 		;;
 	esac
 }
 
+init_log_style
+SCRIPT_START_SECONDS=${SECONDS}
 parse_flags "$@"
 set -- "${ARGS[@]}"
 
@@ -584,7 +593,7 @@ if [[ "${primary}" == "conf" ]]; then
 	fi
 	shift
 else
-	echo "====> Error: Unknown parameter: ${primary}"
+	log_error "Unknown parameter: ${primary}"
 	print_usage
 	exit 1
 fi
@@ -599,7 +608,7 @@ for command in "${commands[@]}"; do
 done
 
 if [[ ${command_found} -ne 1 ]]; then
-	echo "====> Error: Unknown parameter: ${1}"
+	log_error "Unknown parameter: ${1}"
 	print_usage
 	exit 1
 fi
@@ -629,9 +638,11 @@ esac
 
 os_name=$(uname -s)
 if [[ ${os_name} == 'Darwin' ]]; then
+	log_section "Install platform dependencies (macOS)"
 	log_root_path_once
 	install_on_mac
 elif [[ ${os_name} == 'Linux' ]]; then
+	log_section "Install platform dependencies (Linux)"
 	log_root_path_once
 	install_on_linux
 fi
@@ -641,11 +652,12 @@ ensure_dir_exists "${config_path}/backups"
 
 #
 if [[ ${tmux} == 1 ]]; then
-	echo "====> Install tmux plugins manage plugin tpm"
+	log_section "Install config: tmux"
+	log_info "Install tmux plugins manager (tpm)"
 	if [ ! -d ~/.tmux/plugins/tpm ]; then
 		tpm_created=0
 		if ! run_cmd mkdir -p ~/.tmux/plugins; then
-			echo "====> Error: Failed to create ~/.tmux/plugins"
+			log_error "Failed to create ~/.tmux/plugins"
 			exit 1
 		fi
 		if [[ ! -e ~/.tmux/plugins/tpm && ! -L ~/.tmux/plugins/tpm ]]; then
@@ -655,10 +667,10 @@ if [[ ${tmux} == 1 ]]; then
 			if [[ ${tpm_created} -eq 1 ]]; then
 				run_cmd rm -rf ~/.tmux/plugins/tpm >/dev/null 2>&1 || true
 			fi
-			echo "====> Error: Download tpm failed, install stop"
+			log_error "Download tpm failed, install stop"
 			exit 1
 		fi
-		echo "====> Download tpm Succeed"
+		log_ok "Download tpm succeed"
 	fi
 
 	ensure_file_symlink \
@@ -666,56 +678,59 @@ if [[ ${tmux} == 1 ]]; then
 		"${config_path}/configs/tmux/tmux.conf" \
 		"${config_path}/backups/tmux.conf.bak" \
 		"Tmux config" \
-		"====> Tmux config file [tmux.conf] is exist, backup and delete it." \
-		"====> Create symlink for tmux config"
+		"Tmux config file [ tmux.conf ] exists, back up and delete it." \
+		"Create symlink for tmux config"
 fi
 
 if [[ ${vim} == 1 ]]; then
+	log_section "Install config: vim"
 	ensure_file_symlink \
 		"${HOME}/.vimrc" \
 		"${config_path}/configs/vi/vim/vimrc" \
 		"${config_path}/backups/vimrc.bak" \
 		"Vim config" \
-		"====> Vim config file the vimrc has exist" \
-		"====> Create symlink for vim config"
+		"Vim config file [ vimrc ] exists, back up and delete it." \
+		"Create symlink for vim config"
 
 	# 安装vim插件
-	echo "====> Install vim plugins"
+	log_info "Install vim plugins"
 	if has vim; then
 		run_cmd vim +PlugInstall +UpdateRemotePlugins +qa
 	else
-		echo "====> Warning: vim not found, skip plugin install."
+		log_warn "vim not found, skip plugin install."
 	fi
 fi
 
 if [[ ${neovim} == 1 ]]; then
+	log_section "Install config: neovim"
 	ensure_dir_symlink \
 		"${HOME}/.config/nvim" \
 		"${config_path}/configs/vi/nvim" \
 		"${config_path}/backups/nvim.bak" \
 		"Neovim config" \
-		"====> Neovim config dir the nvim has exist" \
-		"====> Create symlink for neovim config"
+		"Neovim config dir exists, back up and delete it." \
+		"Create symlink for neovim config"
 
 	# 安装neovim插件
-	echo "====> Install nvim plugins"
+	log_info "Install nvim plugins"
 	if has nvim; then
 		run_cmd nvim +Lazy +qa
 	else
-		echo "====> Warning: nvim not found, skip plugin install."
+		log_warn "nvim not found, skip plugin install."
 	fi
 
 fi
 
 	if [[ ${zsh} == 1 ]]; then
+	log_section "Install config: zsh"
 		# golang version manager
 	if ! has "g"; then
-		echo "----> Install [ g ]."
+		log_step "Install [ g ]."
 		if [[ ${DRY_RUN} -eq 1 ]]; then
-			echo "DRY-RUN: curl -sSL https://raw.githubusercontent.com/voidint/g/master/install.sh | bash"
+			log_dry "curl -sSL https://raw.githubusercontent.com/voidint/g/master/install.sh | bash"
 		else
 			if ! curl -sSL https://raw.githubusercontent.com/voidint/g/master/install.sh | bash; then
-				echo "====> Error: Install g failed"
+				log_error "Install g failed"
 				exit 1
 			fi
 		fi
@@ -723,14 +738,14 @@ fi
 
 	# nvm
 	if [[ -s "$HOME/.nvm/nvm.sh" ]]; then
-		echo "====> NVM already installed, skipping."
+		log_ok "NVM already installed, skipping."
 	else
-		echo "====> Installing NVM..."
+		log_step "Installing NVM..."
 		if [[ ${DRY_RUN} -eq 1 ]]; then
-			echo "DRY-RUN: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash"
+			log_dry "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash"
 		else
 			if ! curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash; then
-				echo "====> Error: Install NVM failed"
+				log_error "Install NVM failed"
 				exit 1
 			fi
 		fi
@@ -738,18 +753,18 @@ fi
 
 	# zinit
 	if [[ -f "${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git/zinit.zsh" ]]; then
-		echo "====> Zinit already installed, skipping."
+		log_ok "Zinit already installed, skipping."
 	else
 		if [[ ${DRY_RUN} -eq 1 ]]; then
-			echo "DRY-RUN: install zinit via curl | bash"
+			log_dry "install zinit via curl | bash"
 		else
 			if ! bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"; then
-				echo "====> Error: Install zinit failed, install stop"
+				log_error "Install zinit failed, install stop"
 				exit 1
 			fi
 
 			if [[ ! -f "${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git/zinit.zsh" ]]; then
-				echo "====> Error: Zinit was not installed correctly, install stop"
+				log_error "Zinit was not installed correctly, install stop"
 				exit 1
 			fi
 		fi
@@ -757,7 +772,7 @@ fi
 
 	# 更新的 fzf 配置文件
 	if [[ -f "${HOME}/.fzf.zsh" ]]; then
-		echo "====> Fzf config file [ ${HOME}/.fzf.zsh ] exist, update it."
+		log_info "Fzf config file [ ${HOME}/.fzf.zsh ] exists, update it."
 		upsert_fzf_custom_config \
 			"${HOME}/.fzf.zsh" \
 			"${config_path}/configs/zsh/fzf.zsh" \
@@ -769,37 +784,39 @@ fi
 		"${config_path}/configs/zsh/p10k.zsh" \
 		"${config_path}/backups/p10k.zsh.bak" \
 		"P10k config" \
-		"====> P10k config file .p10k.zsh is exist." \
-		"====> Create symlink for p10k config"
+		"P10k config file [ .p10k.zsh ] exists, back up and delete it." \
+		"Create symlink for p10k config"
 
 	ensure_file_symlink \
 		"${HOME}/.zshrc" \
 		"${config_path}/configs/zsh/zshrc" \
 		"${config_path}/backups/zshrc.bak" \
 		"Zsh config" \
-		"====> Zsh config file the [ zshrc ] has exist." \
-		"====> Create symlink for zsh config"
+		"Zsh config file [ .zshrc ] exists, back up and delete it." \
+		"Create symlink for zsh config"
 
-	echo "====> Change to zsh"
+	log_info "Change to zsh"
 	current_shell=$(basename "$SHELL")
 	if [[ "${current_shell}" == "zsh" ]]; then
-		echo "====> Already using zsh, skipping."
+		log_ok "Already using zsh, skipping."
 	else
 		if ! run_cmd chsh -s /bin/zsh; then
-			echo "====> Warning: Failed to change shell to zsh. You may need to do it manually."
+			log_warn "Failed to change shell to zsh. You may need to do it manually."
 		fi
 	fi
 	run_cmd zsh -lc 'source ~/.zshrc'
 fi
 
 if [[ ${ghostty} == 1 ]]; then
+	log_section "Install config: ghostty"
 	ensure_dir_symlink \
 		"${HOME}/.config/ghostty" \
 		"${config_path}/configs/ghostty" \
 		"${config_path}/backups/ghostty.bak" \
 		"Ghostty config" \
-		"====> Ghostty config dir has exist" \
-		"====> Create symlink for ghostty config"
+		"Ghostty config dir exists, back up and delete it." \
+		"Create symlink for ghostty config"
 fi
 
-echo "**** Please change Non-ASCII Font to Hack Nerd Font ****"
+log_info "Please change Non-ASCII Font to Hack Nerd Font"
+log_ok "Install completed in $((SECONDS - SCRIPT_START_SECONDS))s"

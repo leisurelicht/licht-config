@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 
+script_dir=$(
+	cd "$(dirname "${0}")" || exit
+	pwd
+)
+# shellcheck source=lib/log.sh
+source "${script_dir}/lib/log.sh"
+
 fail() {
-	echo "====> Error: $1"
+	log_error "$1"
 	exit 1
 }
 
@@ -19,10 +26,7 @@ print_error_banner() {
 fzf_config_start="# Fzf Custom Config"
 fzf_config_end="# End Fzf Custom Config"
 
-config_path=$(
-	cd "$(dirname "${0}")" || exit
-	pwd
-)
+config_path="${script_dir}"
 
 print_usage() {
 	cat <<'EOF'
@@ -98,7 +102,7 @@ uninstall_apps() {
 	fi
 
 	if ! has brew; then
-		echo "====> Error: [ brew ] is not installed."
+		log_error "[ brew ] is not installed."
 		exit 1
 	fi
 
@@ -150,7 +154,7 @@ uninstall_apps() {
 		)
 
 		if [[ "${brew_mode}" != "all" && "${brew_mode}" != "formula" && "${brew_mode}" != "cask" ]]; then
-			echo "====> Error: Unknown brew mode: ${brew_mode}"
+			log_error "Unknown brew mode: ${brew_mode}"
 			print_usage
 			exit 1
 		fi
@@ -158,7 +162,7 @@ uninstall_apps() {
 		if [[ "${brew_mode}" == "all" || "${brew_mode}" == "formula" ]]; then
 			for pkg in "${packages[@]}"; do
 				if brew list --formula "$pkg" >/dev/null 2>&1; then
-					echo "----> Uninstall brew formula [ ${pkg} ]"
+					log_step "Uninstall brew formula [ ${pkg} ]"
 					brew uninstall "$pkg" >/dev/null 2>&1 || true
 				fi
 			done
@@ -167,7 +171,7 @@ uninstall_apps() {
 		if [[ "${brew_mode}" == "all" || "${brew_mode}" == "cask" ]]; then
 			for cask in "${casks[@]}"; do
 				if brew list --cask "$cask" >/dev/null 2>&1; then
-					echo "----> Uninstall brew cask [ ${cask} ]"
+					log_step "Uninstall brew cask [ ${cask} ]"
 					brew uninstall --cask "$cask" >/dev/null 2>&1 || true
 				fi
 			done
@@ -175,16 +179,16 @@ uninstall_apps() {
 		;;
 	claude)
 		if brew list --formula "dippy" >/dev/null 2>&1; then
-			echo "----> Uninstall brew formula [ dippy ]"
+			log_step "Uninstall brew formula [ dippy ]"
 			brew uninstall "dippy" >/dev/null 2>&1 || true
 		fi
 		if brew tap | grep -q "^ldayton/dippy$"; then
-			echo "----> Remove brew tap [ ldayton/dippy ]"
+			log_step "Remove brew tap [ ldayton/dippy ]"
 			brew untap "ldayton/dippy" >/dev/null 2>&1 || true
 		fi
 		;;
 	*)
-		echo "====> Error: Unknown apps parameter: ${app}"
+		log_error "Unknown apps parameter: ${app}"
 		print_usage
 		exit 1
 		;;
@@ -248,6 +252,8 @@ move_path() {
 	fi
 }
 
+init_log_style
+SCRIPT_START_SECONDS=${SECONDS}
 parse_flags "$@"
 set -- "${ARGS[@]}"
 
@@ -285,11 +291,12 @@ fi
 
 case "${primary}" in
 all)
+	log_section "Uninstall apps + all configs"
 	if has brew; then
 		uninstall_apps "brew" "all"
 		uninstall_apps "claude"
 	else
-		echo "====> Warning: [ brew ] is not installed, skip apps uninstall."
+		log_warn "[ brew ] is not installed, skip apps uninstall."
 	fi
 	set -- all
 	;;
@@ -301,11 +308,13 @@ conf)
 	set -- "${secondary}"
 	;;
 apps)
+	log_section "Uninstall apps: ${secondary:-all}"
 	uninstall_apps "${secondary}" "${3:-}"
+	log_ok "Uninstall completed in $((SECONDS - SCRIPT_START_SECONDS))s"
 	exit 0
 	;;
 *)
-	echo "====> Error: Unknown parameter: ${primary}"
+	log_error "Unknown parameter: ${primary}"
 	print_usage
 	exit 1
 	;;
@@ -321,29 +330,30 @@ for command in "${commands[@]}"; do
 done
 
 if [[ ${command_found} -ne 1 ]]; then
-	echo "====> Error: Unknown parameter: ${1}"
+	log_error "Unknown parameter: ${1}"
 	print_usage
 	exit 1
 fi
 
 if [[ "${1}" == "all" || "${1}" == "tmux" ]]; then
+	log_section "Uninstall config: tmux"
 	if [ -h ~/.tmux.conf ]; then
-		echo "====> Remove tmux config file"
+		log_info "Remove tmux config file"
 		remove_path ~/.tmux.conf "tmux config file"
 
 		if [[ -f "${config_path}/backups/tmux.conf.bak" ]]; then
-			echo "====> Move backup tmux config file"
+			log_step "Move backup tmux config file"
 			if [[ ! -f ~/.tmux.conf ]]; then
 				move_path "${config_path}/backups/tmux.conf.bak" ~/.tmux.conf "tmux backup"
 			fi
 		fi
 
-		echo "====> Delete tmux plugin"
+		log_step "Delete tmux plugin"
 		remove_path ~/.tmux "tmux plugin directory" -rf
 
-		echo "====> Uninstall tmux config success"
+		log_ok "Uninstall tmux config success"
 	else
-		echo "====> No tmux"
+		log_warn "No tmux"
 		if [[ "${1}" == "tmux" ]]; then
 			exit 0
 		fi
@@ -351,129 +361,135 @@ if [[ "${1}" == "all" || "${1}" == "tmux" ]]; then
 fi
 
 if [[ "${1}" == "all" || "${1}" == "vim" ]]; then
+	log_section "Uninstall config: vim"
 	if [ -h ~/.vimrc ]; then
-		echo '====> Uninstall vim'
+		log_info "Uninstall vim"
 	else
-		echo '====> No vim'
+		log_warn "No vim"
 		if [[ "${1}" == "vim" ]]; then
 			exit 0
 		fi
 	fi
 
 	if [ -h ~/.vimrc ]; then
-		echo '====> Remove vimrc'
+		log_info "Remove vimrc"
 		remove_path ~/.vimrc "vim config file"
 
 		if [[ -f "${config_path}/backups/vimrc.bak" ]]; then
-			echo '====> Move vimrc file back'
+			log_step "Move vimrc file back"
 			if [[ ! -f ~/.vimrc ]]; then
 				move_path "${config_path}"/backups/vimrc.bak ~/.vimrc "vim backup"
 			fi
 		fi
 
-		echo "====> Delete vim plugin"
+		log_step "Delete vim plugin"
 		remove_path ~/.vim "vim plugin directory" -rf
 
-		echo '====> Uninstall vim config success'
+		log_ok "Uninstall vim config success"
 	fi
 fi
 
 if [[ "${1}" == "all" || "${1}" == "neovim" ]]; then
+	log_section "Uninstall config: neovim"
 	nvim_backup_path=$(first_existing_backup_path "${config_path}/backups/nvim.bak" "${config_path}/backups/nvim_bak")
 
 	if [ -h ~/.config/nvim ]; then
-		echo '====> Uninstall neovim'
+		log_info "Uninstall neovim"
 	else
-		echo '====> No neovim'
+		log_warn "No neovim"
 		if [[ "${1}" == "neovim" ]]; then
 			exit 0
 		fi
 	fi
 
 	if [ -h ~/.config/nvim ]; then
-		echo '====> Remove nvim config'
+		log_info "Remove nvim config"
 		remove_path ~/.config/nvim "neovim config directory" -r
 
 		if [[ -n "${nvim_backup_path}" && -d "${nvim_backup_path}" ]]; then
-			echo '====> Move nvim folder back'
+			log_step "Move nvim folder back"
 			if [[ ! -d ~/.config/nvim ]]; then
 				move_path "${nvim_backup_path}" ~/.config/nvim "neovim backup"
 			fi
 		fi
 
-		echo "====> Delete neovim plugin"
+		log_step "Delete neovim plugin"
 		remove_path ~/.local/share/nvim "neovim data directory" -rf
 
-		echo '====> Uninstall neovim config success'
+		log_ok "Uninstall neovim config success"
 	fi
 fi
 
 if [[ "${1}" == "all" || "${1}" == "zsh" ]]; then
+	log_section "Uninstall config: zsh"
 	if [ -h ~/.zshrc ]; then
-		echo '====> Uninstall zsh'
+		log_info "Uninstall zsh"
 	else
-		echo '====> No zsh'
+		log_warn "No zsh"
 		if [[ "${1}" == "zsh" ]]; then
 			exit 0
 		fi
 	fi
 
 	if [ -h ~/.zshrc ]; then
-		echo '====> Remove zshrc'
+		log_info "Remove zshrc"
 		remove_path ~/.zshrc "zsh config file"
 
 		if [[ -f "${config_path}/backups/zshrc.bak" ]]; then
-			echo '====> Move zshrc file back'
+			log_step "Move zshrc file back"
 			if [[ ! -f ~/.zshrc ]]; then
 				move_path "${config_path}/backups/zshrc.bak" ~/.zshrc "zsh backup"
 			fi
 		fi
 
-		echo "====> Remove P10k config"
+		log_info "Remove P10k config"
 		if [ -h ~/.p10k.zsh ]; then
 			remove_path ~/.p10k.zsh "p10k config file"
 		fi
 		if [[ -f "${config_path}/backups/p10k.zsh.bak" ]]; then
-			echo '====> Move P10k config file back'
+			log_step "Move P10k config file back"
 			if [[ ! -f ~/.p10k.zsh ]]; then
 				move_path "${config_path}/backups/p10k.zsh.bak" ~/.p10k.zsh "p10k backup"
 			fi
 		fi
 
-		echo "====> Remove fzf plugin"
+		log_info "Remove fzf plugin"
 		if [[ -f "${config_path}/backups/fzf.zsh.bak" ]]; then
 			move_path "${config_path}/backups/fzf.zsh.bak" ~/.fzf.zsh "fzf backup"
 		else
 			remove_fzf_custom_config ~/.fzf.zsh
 		fi
 
-		echo '====> Uninstall zsh config success'
+		log_ok "Uninstall zsh config success"
 	fi
 fi
 
 if [[ "${1}" == "all" || "${1}" == "ghostty" ]]; then
+	log_section "Uninstall config: ghostty"
 	ghostty_backup_path=$(first_existing_backup_path "${config_path}/backups/ghostty.bak" "${config_path}/backups/ghostty_bak")
 
 	if [ -h ~/.config/ghostty ]; then
-		echo '====> Uninstall ghostty'
+		log_info "Uninstall ghostty"
 	else
-		echo '====> No ghostty'
+		log_warn "No ghostty"
 		if [[ "${1}" == "ghostty" ]]; then
 			exit 0
 		fi
 	fi
 
 	if [ -h ~/.config/ghostty ]; then
-		echo '====> Remove ghostty config'
+		log_info "Remove ghostty config"
 		remove_path ~/.config/ghostty "ghostty config directory" -r
 
 		if [[ -n "${ghostty_backup_path}" && -d "${ghostty_backup_path}" ]]; then
-			echo '====> Move ghostty folder back'
+			log_step "Move ghostty folder back"
 			if [[ ! -d ~/.config/ghostty ]]; then
 				move_path "${ghostty_backup_path}" ~/.config/ghostty "ghostty backup"
 			fi
 		fi
 
-		echo '====> Uninstall ghostty config success'
+		log_ok "Uninstall ghostty config success"
 	fi
 fi
+
+log_ok "Uninstall completed in $((SECONDS - SCRIPT_START_SECONDS))s"
