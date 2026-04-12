@@ -63,10 +63,11 @@ git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
 cd .licht-config
 git submodule update --init --recursive
 
-# install one config
-./install.sh --conf zsh
+# start TUI launcher (recommended)
+./launcher.sh
 
-# or install brew packages/apps from this repo
+# or run scripts directly
+./install.sh --conf zsh
 ./install.sh --apps brew all
 ```
 
@@ -79,6 +80,18 @@ git clone --depth=1 https://github.com/leisurelicht/.licht-config.git
 cd .licht-config
 git submodule update --init --recursive
 ```
+
+### Launcher (recommended)
+
+```bash
+./launcher.sh
+```
+
+The launcher provides a guided TUI flow:
+- choose `Install` or `Uninstall`
+- choose scope (`All`, `Apps only`, `Config only`)
+- select components step by step
+- preview commands before execution
 
 ### Zsh
 

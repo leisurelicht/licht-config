@@ -36,6 +36,7 @@ This repo is primarily a symlink-based config installer:
 ### Main entry points
 
 ```bash
+./launcher.sh
 ./install.sh all [all|formula|cask]
 ./install.sh --apps [all|brew|claude] [all|formula|cask]
 ./install.sh --conf [all|zsh|tmux|vim|neovim|ghostty]
@@ -57,12 +58,13 @@ This repo is primarily a symlink-based config installer:
 ```bash
 ./apps/check.sh
 
+bash -n launcher.sh
 bash -n install.sh
 bash -n uninstall.sh
 
 # Optional, if installed
-shellcheck install.sh uninstall.sh apps/*.sh
-shfmt -d install.sh uninstall.sh apps/*.sh
+shellcheck launcher.sh install.sh uninstall.sh apps/*.sh
+shfmt -d launcher.sh install.sh uninstall.sh apps/*.sh
 ```
 
 ### Submodule setup
