@@ -6,7 +6,8 @@ Personal dotfiles repository for managing shell, terminal, editor, and app confi
 
 This repo is primarily a symlink-based config installer:
 - source files live in `configs/`
-- helper scripts live in `apps/`
+- install script implementations live in `scripts/`
+- shared app install lists live in `apps/`
 - user files are linked into `$HOME`
 - previous user files are moved into `backups/`
 
@@ -17,8 +18,16 @@ This repo is primarily a symlink-based config installer:
 ├── install.sh
 ├── uninstall.sh
 ├── apps/
+│   ├── brew_lists.sh
+│   └── for_claude_lists.sh
+├── scripts/
 │   ├── brew.sh
-│   └── for_claude.sh
+│   ├── install.sh
+│   ├── uninstall.sh
+│   ├── check.sh
+│   ├── for_claude.sh
+│   └── lib/
+│       └── log.sh
 ├── configs/
 │   ├── ghostty/
 │   ├── tmux/
@@ -48,24 +57,27 @@ This repo is primarily a symlink-based config installer:
 ### Helper scripts
 
 ```bash
-./apps/brew.sh
 ./apps/brew_lists.sh
-./apps/check.sh
-./apps/for_claude.sh
+./apps/for_claude_lists.sh
+./scripts/brew.sh
+./scripts/check.sh
+./scripts/for_claude.sh
 ```
 
 ### Validation
 
 ```bash
-./apps/check.sh
 
 bash -n launcher.sh
 bash -n install.sh
 bash -n uninstall.sh
+bash -n scripts/install.sh
+bash -n scripts/uninstall.sh
+bash -n scripts/check.sh
 
 # Optional, if installed
-shellcheck launcher.sh install.sh uninstall.sh apps/*.sh
-shfmt -d launcher.sh install.sh uninstall.sh apps/*.sh
+shellcheck launcher.sh install.sh uninstall.sh scripts/*.sh apps/*.sh
+shfmt -d launcher.sh install.sh uninstall.sh scripts/*.sh apps/*.sh
 ```
 
 ### Submodule setup
@@ -95,8 +107,8 @@ Backup location:
 ### 1. Config path changes
 
 If you move or rename anything under `configs/`, check all of:
-- `install.sh`
-- `uninstall.sh`
+- `scripts/install.sh`
+- `scripts/uninstall.sh`
 - `README.md`
 - `AGENTS.md`
 - `.gitmodules` when `configs/vi/nvim` is involved
@@ -125,7 +137,7 @@ If install/uninstall backup paths change, update both scripts and the documentat
 
 ### 4. Helper script changes
 
-If files under `apps/` are renamed or added, update:
+If files under `apps/` or `scripts/` are renamed or added, update:
 - `README.md`
 - `AGENTS.md`
 - lint commands if needed
@@ -165,20 +177,21 @@ For any path/layout/script change, the work is not complete until all relevant i
 
 1. `bash -n install.sh` passes.
 2. `bash -n uninstall.sh` passes.
-3. No docs still reference removed paths or old directory names.
-4. If `configs/vi/nvim` was touched or moved:
+3. `bash -n scripts/install.sh` and `bash -n scripts/uninstall.sh` pass.
+4. No docs still reference removed paths or old directory names.
+5. If `configs/vi/nvim` was touched or moved:
    - `.gitmodules` is correct
    - `git submodule status` works
    - `git ls-files --stage` shows the correct gitlink path
-5. If helper scripts changed, their paths in docs match the repo.
+6. If helper scripts changed, their paths in docs match the repo.
 
 ## Common Tasks
 
 ### Add a new managed config
 
 1. Add files under `configs/<name>/`.
-2. Update `install.sh` symlink and backup logic.
-3. Update `uninstall.sh` restore logic.
+2. Update `scripts/install.sh` symlink and backup logic.
+3. Update `scripts/uninstall.sh` restore logic.
 4. Update `README.md` and `AGENTS.md`.
 
 ### Move a config directory
@@ -191,10 +204,9 @@ For any path/layout/script change, the work is not complete until all relevant i
 ### Add a brew package or app
 
 1. Edit `apps/brew_lists.sh`.
-2. Put formulae in `BREW_PACKAGES`.
-3. Put GUI apps / casks in `BREW_CASKS`.
-4. If an item needs a tap first, add a rule in `BREW_TAP_RULES` (`type:name:tap`).
-5. Keep the list changes scoped; do not reshuffle unrelated entries.
+2. Add items to `BREW_ITEMS` using `type:name[:tap]`.
+3. For Claude-specific app installs, edit `apps/for_claude_lists.sh` and add items to `CLAUDE_BREW_ITEMS`.
+4. Keep the list changes scoped; do not reshuffle unrelated entries.
 
 ### Review this repo
 

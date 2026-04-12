@@ -36,13 +36,13 @@
   - Neovim configuration based on [LazyVim](https://github.com/LazyVim/LazyVim)
   - Ghostty configuration
   - Install and uninstall scripts
-  - Helper scripts under `apps/`
+  - Install scripts under `scripts/` and shared app install lists under `apps/`
 
 > Note: the Neovim configuration under `configs/vi/nvim` is no longer actively maintained in this repository.
 
 ## Maintenance status
 
-- Active: `configs/zsh`, `configs/tmux`, `configs/vi/vim`, `configs/ghostty`, `apps/`, `install.sh`, `uninstall.sh`
+- Active: `configs/zsh`, `configs/tmux`, `configs/vi/vim`, `configs/ghostty`, `apps/`, `scripts/`, `install.sh`, `uninstall.sh`
 - Frozen: `configs/vi/nvim` (submodule)
 
 ## File structure
@@ -50,7 +50,8 @@
 ```text
 .
 ├── backups
-├── apps // install helper scripts
+├── apps // shared app install lists
+├── scripts // script implementations and shared shell libs
 ├── LICENSE
 ├── README.md
 └── configs // tmux, vim, neovim, zsh, ghostty configuration
@@ -282,8 +283,10 @@ configs/vi
 ### Helper scripts
 
 ```bash
-./apps/brew.sh
-./apps/for_claude.sh
-# shared source of formula/cask lists
+./scripts/brew.sh
+./scripts/for_claude.sh
+# shared sources of install lists
 ./apps/brew_lists.sh
+./apps/for_claude_lists.sh
+./scripts/check.sh
 ```

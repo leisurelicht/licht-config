@@ -24,8 +24,9 @@ Interactive TUI launcher for install/uninstall workflows.
 Keys:
   Up/Down or j/k: move
   Space: toggle (multi-select)
+  Left: back
+  Right: next
   Enter: continue/confirm
-  Esc: back
   q: quit
 USAGE
 	exit 0
@@ -149,7 +150,7 @@ print_frame_header() {
 	fi
 
 	printf "%b╭──────────────────────────────────────────────────────────────────────────────╮%b\n" "${C_DIM}" "${C_RESET}"
-	printf "%b│%-76s│%b\n" "${C_DIM}" "" "${C_RESET}"
+	printf "%b│%-78s│%b\n" "${C_DIM}" "" "${C_RESET}"
 	printf "%b├──────────────────────────────────────────────────────────────────────────────┤%b\n" "${C_DIM}" "${C_RESET}"
 	printf "  %b%s%b · %s\n\n" "${mode_color}" "${title}" "${C_RESET}" "${subtitle}"
 	print_workflow "${current_step}"
@@ -191,7 +192,7 @@ menu_single() {
 			fi
 		done
 
-		print_frame_footer "[Enter] Confirm  [↑/↓] Navigate  [Esc] Back  [Q] Quit"
+		print_frame_footer "[←] Back  [→] Next  [↑/↓] Navigate  [Enter] Confirm  [Q] Quit"
 		key=$(read_key) || continue
 		case "${key}" in
 		$'\x1b[A'|k)
@@ -206,8 +207,12 @@ menu_single() {
 			MENU_RESULT=${idx}
 			return 0
 			;;
-		$'\x1b')
+		$'\x1b[D')
 			MENU_BACK=1
+			return 0
+			;;
+		$'\x1b[C')
+			MENU_RESULT=${idx}
 			return 0
 			;;
 		q|Q)
@@ -245,10 +250,10 @@ menu_apps_multi() {
 
 		if [[ ${APP_BREW} -eq 1 ]]; then
 			printf "\n  Brew mode: %b%s%b\n" "${C_ACCENT}" "${BREW_MODE}" "${C_RESET}"
-			printf "  Press %bb%b to switch brew mode\n" "${C_TITLE}" "B" "${C_RESET}"
+			printf "  Press %b%s%b to switch brew mode\n" "${C_TITLE}" "b" "${C_RESET}"
 		fi
 
-		print_frame_footer "[Space] Toggle  [↑/↓] Navigate  [B] Brew mode  [Enter] Continue"
+		print_frame_footer "[←] Back  [→] Next  [↑/↓] Navigate  [Space] Toggle  [B] Brew mode"
 		key=$(read_key) || continue
 		case "${key}" in
 		$'\x1b[A'|k)
@@ -281,8 +286,14 @@ menu_apps_multi() {
 			fi
 			return 0
 			;;
-		$'\x1b')
+		$'\x1b[D')
 			MENU_BACK=1
+			return 0
+			;;
+		$'\x1b[C')
+			if [[ ${APP_BREW} -eq 0 && ${APP_CLAUDE} -eq 0 ]]; then
+				continue
+			fi
 			return 0
 			;;
 		q|Q)
@@ -326,7 +337,7 @@ menu_configs_multi() {
 		selected_total=$((CFG_ZSH + CFG_TMUX + CFG_VIM + CFG_NEOVIM + CFG_GHOSTTY))
 		printf "\n  Selected: %b%s%b\n" "${C_ACCENT}" "${selected_total}" "${C_RESET}"
 
-		print_frame_footer "[Space] Toggle  [↑/↓] Navigate  [Enter] Continue"
+		print_frame_footer "[←] Back  [→] Next  [↑/↓] Navigate  [Space] Toggle"
 		key=$(read_key) || continue
 		case "${key}" in
 		$'\x1b[A'|k)
@@ -350,8 +361,14 @@ menu_configs_multi() {
 			fi
 			return 0
 			;;
-		$'\x1b')
+		$'\x1b[D')
 			MENU_BACK=1
+			return 0
+			;;
+		$'\x1b[C')
+			if [[ $((CFG_ZSH + CFG_TMUX + CFG_VIM + CFG_NEOVIM + CFG_GHOSTTY)) -eq 0 ]]; then
+				continue
+			fi
 			return 0
 			;;
 		q|Q)
@@ -425,7 +442,7 @@ print_preview() {
 		printf "  %b-%b %s\n" "${C_ACCENT}" "${C_RESET}" "${COMMANDS[i]}"
 	done
 
-	printf "\n  Managed path mapping:\n"
+	printf "\n  Managed path mapping:\n\n"
 	printf "  - configs/zsh/zshrc -> ~/.zshrc\n"
 	printf "  - configs/zsh/p10k.zsh -> ~/.p10k.zsh\n"
 	printf "  - configs/tmux/tmux.conf -> ~/.tmux.conf\n"
@@ -433,7 +450,7 @@ print_preview() {
 	printf "  - configs/vi/nvim -> ~/.config/nvim\n"
 	printf "  - configs/ghostty -> ~/.config/ghostty\n"
 
-	print_frame_footer "[Enter] Continue  [Esc] Back  [Q] Quit"
+	print_frame_footer "[←] Back  [→] Next  [Enter] Continue  [Q] Quit"
 }
 
 confirm_screen() {
@@ -463,7 +480,7 @@ confirm_screen() {
 			fi
 		done
 
-		print_frame_footer "[Enter] Select  [↑/↓] Navigate"
+		print_frame_footer "[←] Back  [→] Next  [↑/↓] Navigate  [Enter] Select"
 		key=$(read_key) || continue
 		case "${key}" in
 		$'\x1b[A'|k)
@@ -476,8 +493,12 @@ confirm_screen() {
 			MENU_RESULT=${idx}
 			return 0
 			;;
-		$'\x1b')
+		$'\x1b[D')
 			MENU_BACK=1
+			return 0
+			;;
+		$'\x1b[C')
+			MENU_RESULT=${idx}
 			return 0
 			;;
 		q|Q)
@@ -609,13 +630,14 @@ main_loop() {
 				STEP=4
 			fi
 			;;
-		4)
-			print_preview
-			case "$(read_key)" in
-			$'\x1b') STEP=3 ;;
-			q|Q) return 0 ;;
-			*) STEP=5 ;;
-			esac
+			4)
+				print_preview
+				case "$(read_key)" in
+				$'\x1b[D') STEP=3 ;;
+				$'\x1b[C') STEP=5 ;;
+				q|Q) return 0 ;;
+				*) STEP=5 ;;
+				esac
 			;;
 		5)
 			confirm_screen
