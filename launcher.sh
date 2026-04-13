@@ -7,11 +7,11 @@ script_dir=$(
 	pwd
 )
 
-install_script="${script_dir}/install.sh"
-uninstall_script="${script_dir}/uninstall.sh"
+install_script="${script_dir}/scripts/install.sh"
+uninstall_script="${script_dir}/scripts/uninstall.sh"
 
 if [[ ! -x "${install_script}" || ! -x "${uninstall_script}" ]]; then
-	echo "Missing install.sh or uninstall.sh in ${script_dir}" >&2
+	echo "Missing scripts/install.sh or scripts/uninstall.sh in ${script_dir}" >&2
 	exit 1
 fi
 
@@ -34,7 +34,7 @@ fi
 
 if [[ ! -t 0 || ! -t 1 ]]; then
 	echo "launcher.sh requires an interactive terminal." >&2
-	echo "Use install.sh/uninstall.sh directly in non-interactive mode." >&2
+	echo "Use scripts/install.sh or scripts/uninstall.sh in non-interactive mode." >&2
 	exit 1
 fi
 
@@ -436,16 +436,16 @@ build_commands() {
 	if [[ "${SCOPE}" == "all" || "${SCOPE}" == "apps" ]]; then
 		if [[ ${APP_BREW} -eq 1 ]]; then
 			if [[ "${ACTION}" == "install" ]]; then
-				append_command "./install.sh --apps brew ${BREW_MODE}"
+				append_command "./scripts/install.sh --apps brew ${BREW_MODE}"
 			else
-				append_command "./uninstall.sh --apps brew ${BREW_MODE}"
+				append_command "./scripts/uninstall.sh --apps brew ${BREW_MODE}"
 			fi
 		fi
 		if [[ ${APP_CLAUDE} -eq 1 ]]; then
 			if [[ "${ACTION}" == "install" ]]; then
-				append_command "./install.sh --apps claude"
+				append_command "./scripts/install.sh --apps claude"
 			else
-				append_command "./uninstall.sh --apps claude"
+				append_command "./scripts/uninstall.sh --apps claude"
 			fi
 		fi
 	fi
@@ -454,25 +454,25 @@ build_commands() {
 		local conf_selected=$((CFG_ZSH + CFG_TMUX + CFG_VIM + CFG_NEOVIM + CFG_GHOSTTY))
 		if [[ ${conf_selected} -eq 5 ]]; then
 			if [[ "${ACTION}" == "install" ]]; then
-				append_command "./install.sh --conf all"
+				append_command "./scripts/install.sh --conf all"
 			else
-				append_command "./uninstall.sh --conf all"
+				append_command "./scripts/uninstall.sh --conf all"
 			fi
 		else
 			if [[ ${CFG_ZSH} -eq 1 ]]; then
-				if [[ "${ACTION}" == "install" ]]; then append_command "./install.sh --conf zsh"; else append_command "./uninstall.sh --conf zsh"; fi
+				if [[ "${ACTION}" == "install" ]]; then append_command "./scripts/install.sh --conf zsh"; else append_command "./scripts/uninstall.sh --conf zsh"; fi
 			fi
 			if [[ ${CFG_TMUX} -eq 1 ]]; then
-				if [[ "${ACTION}" == "install" ]]; then append_command "./install.sh --conf tmux"; else append_command "./uninstall.sh --conf tmux"; fi
+				if [[ "${ACTION}" == "install" ]]; then append_command "./scripts/install.sh --conf tmux"; else append_command "./scripts/uninstall.sh --conf tmux"; fi
 			fi
 			if [[ ${CFG_VIM} -eq 1 ]]; then
-				if [[ "${ACTION}" == "install" ]]; then append_command "./install.sh --conf vim"; else append_command "./uninstall.sh --conf vim"; fi
+				if [[ "${ACTION}" == "install" ]]; then append_command "./scripts/install.sh --conf vim"; else append_command "./scripts/uninstall.sh --conf vim"; fi
 			fi
 			if [[ ${CFG_NEOVIM} -eq 1 ]]; then
-				if [[ "${ACTION}" == "install" ]]; then append_command "./install.sh --conf neovim"; else append_command "./uninstall.sh --conf neovim"; fi
+				if [[ "${ACTION}" == "install" ]]; then append_command "./scripts/install.sh --conf neovim"; else append_command "./scripts/uninstall.sh --conf neovim"; fi
 			fi
 			if [[ ${CFG_GHOSTTY} -eq 1 ]]; then
-				if [[ "${ACTION}" == "install" ]]; then append_command "./install.sh --conf ghostty"; else append_command "./uninstall.sh --conf ghostty"; fi
+				if [[ "${ACTION}" == "install" ]]; then append_command "./scripts/install.sh --conf ghostty"; else append_command "./scripts/uninstall.sh --conf ghostty"; fi
 			fi
 		fi
 	fi

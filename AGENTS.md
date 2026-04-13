@@ -15,8 +15,6 @@ This repo is primarily a symlink-based config installer:
 
 ```text
 .
-├── install.sh
-├── uninstall.sh
 ├── apps/
 │   ├── brew_lists.sh
 │   └── for_claude_lists.sh
@@ -46,12 +44,12 @@ This repo is primarily a symlink-based config installer:
 
 ```bash
 ./launcher.sh
-./install.sh all [all|formula|cask]
-./install.sh --apps [all|brew|claude] [all|formula|cask]
-./install.sh --conf [all|zsh|tmux|vim|neovim|ghostty]
-./uninstall.sh all
-./uninstall.sh --apps [brew|claude] [all|formula|cask]
-./uninstall.sh --conf [all|zsh|tmux|vim|neovim|ghostty]
+./scripts/install.sh all [all|formula|cask]
+./scripts/install.sh --apps [all|brew|claude] [all|formula|cask]
+./scripts/install.sh --conf [all|zsh|tmux|vim|neovim|ghostty]
+./scripts/uninstall.sh all
+./scripts/uninstall.sh --apps [brew|claude] [all|formula|cask]
+./scripts/uninstall.sh --conf [all|zsh|tmux|vim|neovim|ghostty]
 ```
 
 ### Helper scripts
@@ -69,15 +67,13 @@ This repo is primarily a symlink-based config installer:
 ```bash
 
 bash -n launcher.sh
-bash -n install.sh
-bash -n uninstall.sh
 bash -n scripts/install.sh
 bash -n scripts/uninstall.sh
 bash -n scripts/check.sh
 
 # Optional, if installed
-shellcheck launcher.sh install.sh uninstall.sh scripts/*.sh apps/*.sh
-shfmt -d launcher.sh install.sh uninstall.sh scripts/*.sh apps/*.sh
+shellcheck launcher.sh scripts/*.sh apps/*.sh
+shfmt -d launcher.sh scripts/*.sh apps/*.sh
 ```
 
 ### Submodule setup
@@ -159,8 +155,8 @@ If files under `apps/` or `scripts/` are renamed or added, update:
 
 ### Repo-specific behavior
 
-- `install.sh` should be rerunnable without mutating repo-owned config directories.
-- `uninstall.sh` should only remove managed symlinks and restore backups conservatively.
+- `scripts/install.sh` should be rerunnable without mutating repo-owned config directories.
+- `scripts/uninstall.sh` should only remove managed symlinks and restore backups conservatively.
 - `ghostty`, `nvim`, and other directory symlinks need careful handling on macOS because `ln` can follow directory symlinks.
 
 ## Do Not Touch By Default
@@ -175,15 +171,13 @@ If files under `apps/` or `scripts/` are renamed or added, update:
 
 For any path/layout/script change, the work is not complete until all relevant items below are true:
 
-1. `bash -n install.sh` passes.
-2. `bash -n uninstall.sh` passes.
-3. `bash -n scripts/install.sh` and `bash -n scripts/uninstall.sh` pass.
-4. No docs still reference removed paths or old directory names.
-5. If `configs/vi/nvim` was touched or moved:
+1. `bash -n scripts/install.sh` and `bash -n scripts/uninstall.sh` pass.
+2. No docs still reference removed paths or old directory names.
+3. If `configs/vi/nvim` was touched or moved:
    - `.gitmodules` is correct
    - `git submodule status` works
    - `git ls-files --stage` shows the correct gitlink path
-6. If helper scripts changed, their paths in docs match the repo.
+4. If helper scripts changed, their paths in docs match the repo.
 
 ## Common Tasks
 

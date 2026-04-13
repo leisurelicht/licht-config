@@ -21,8 +21,6 @@ fail() {
 
 check_shell_syntax() {
 	log_step "Shell syntax"
-	bash -n "${repo_root}/install.sh"
-	bash -n "${repo_root}/uninstall.sh"
 	bash -n "${repo_root}/launcher.sh"
 	bash -n "${repo_root}/scripts/check.sh"
 	bash -n "${repo_root}/scripts/install.sh"

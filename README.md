@@ -42,7 +42,7 @@
 
 ## Maintenance status
 
-- Active: `configs/zsh`, `configs/tmux`, `configs/vi/vim`, `configs/ghostty`, `apps/`, `scripts/`, `install.sh`, `uninstall.sh`
+- Active: `configs/zsh`, `configs/tmux`, `configs/vi/vim`, `configs/ghostty`, `apps/`, `scripts/`, `scripts/install.sh`, `scripts/uninstall.sh`
 - Frozen: `configs/vi/nvim` (submodule)
 
 ## File structure
@@ -68,8 +68,8 @@ git submodule update --init --recursive
 ./launcher.sh
 
 # or run scripts directly
-./install.sh --conf zsh
-./install.sh --apps brew all
+./scripts/install.sh --conf zsh
+./scripts/install.sh --apps brew all
 ```
 
 ## Usage
@@ -101,7 +101,7 @@ The launcher provides a guided TUI flow:
 - install
 
   ```bash
-  ./install.sh --conf zsh
+  ./scripts/install.sh --conf zsh
   ```
 
   - change terminal font to Hack Nerd Font
@@ -112,7 +112,7 @@ The launcher provides a guided TUI flow:
 - uninstall
 
   ```bash
-  ./uninstall.sh --conf zsh
+  ./scripts/uninstall.sh --conf zsh
   ```
 
 #### File structure
@@ -141,7 +141,7 @@ The launcher provides a guided TUI flow:
   1. run install script
 
   ```bash
-  ./install.sh --conf tmux
+  ./scripts/install.sh --conf tmux
   ```
 
   2. run tmux and install tmux plugins
@@ -161,7 +161,7 @@ The launcher provides a guided TUI flow:
 - uninstall
 
   ```bash
-  ./uninstall.sh --conf tmux
+  ./scripts/uninstall.sh --conf tmux
   ```
 
 #### File structure
@@ -239,7 +239,7 @@ The launcher provides a guided TUI flow:
   1. install full version
 
   ```bash
-  ./install.sh [vim/neovim]
+  ./scripts/install.sh [vim/neovim]
   ```
 
   2. only install mini vim
@@ -251,14 +251,14 @@ The launcher provides a guided TUI flow:
 - uninstall
 
   ```bash
-  ./uninstall.sh [vim/neovim]
+  ./scripts/uninstall.sh [vim/neovim]
   ```
 
 - ghostty
 
   ```bash
-  ./install.sh --conf ghostty
-  ./uninstall.sh --conf ghostty
+  ./scripts/install.sh --conf ghostty
+  ./scripts/uninstall.sh --conf ghostty
   ```
 
 #### File structure

@@ -405,25 +405,25 @@ log_root_path_once() {
 print_usage() {
 	cat <<'EOF'
 Usage:
-  ./install.sh [--dry-run] --apps <brew|all|claude> [args...]
+  ./scripts/install.sh [--dry-run] --apps <brew|all|claude> [args...]
       Install apps.
 
-  ./install.sh [--dry-run] --conf <all|zsh|tmux|vim|neovim|ghostty>
+  ./scripts/install.sh [--dry-run] --conf <all|zsh|tmux|vim|neovim|ghostty>
       Install config symlinks + related setup.
 
-  ./install.sh [--dry-run] all
+  ./scripts/install.sh [--dry-run] all
       Install all apps + all configs.
 
-  ./install.sh [--dry-run] --apps brew <brew_mode>
+  ./scripts/install.sh [--dry-run] --apps brew <brew_mode>
       Install Homebrew formulae/casks from `scripts/brew.sh`.
 
-  ./install.sh [--dry-run] --apps all
+  ./scripts/install.sh [--dry-run] --apps all
       Install all app installers under `scripts/`.
 
-  ./install.sh [--dry-run] --apps claude
+  ./scripts/install.sh [--dry-run] --apps claude
       Install Claude-related tooling from `scripts/for_claude.sh`.
 
-  ./install.sh [--dry-run] --conf <all|zsh|tmux|vim|neovim|ghostty>
+  ./scripts/install.sh [--dry-run] --conf <all|zsh|tmux|vim|neovim|ghostty>
       Install config symlinks + related setup.
 
 Options:
@@ -434,10 +434,10 @@ Arguments:
   brew_mode  all | formula | cask
 
 Examples:
-  ./install.sh --conf zsh
-  ./install.sh --apps brew formula
-  ./install.sh --apps claude
-  ./install.sh all
+  ./scripts/install.sh --conf zsh
+  ./scripts/install.sh --apps brew formula
+  ./scripts/install.sh --apps claude
+  ./scripts/install.sh all
 EOF
 }
 
@@ -537,13 +537,13 @@ elif [[ "${primary}" == "--conf" ]]; then
 fi
 
 if [[ "${orig_primary}" == "apps" ]]; then
-	# legacy positional form: ./install.sh apps ...
+	# legacy positional form: ./scripts/install.sh apps ...
 	print_error_banner "ERROR: Use --apps (legacy 'apps' is not supported)"
 	print_usage
 	exit 1
 fi
 if [[ "${orig_primary}" == "conf" ]]; then
-	# legacy positional form: ./install.sh conf ...
+	# legacy positional form: ./scripts/install.sh conf ...
 	print_error_banner "ERROR: Use --conf (legacy 'conf' is not supported)"
 	print_usage
 	exit 1

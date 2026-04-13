@@ -40,22 +40,22 @@ config_path="${repo_root}"
 print_usage() {
 	cat <<'EOF'
 Usage:
-  ./uninstall.sh --apps <brew|claude> [args...]
+  ./scripts/uninstall.sh --apps <brew|claude> [args...]
       Uninstall apps.
 
-  ./uninstall.sh --conf <all|zsh|tmux|vim|neovim|ghostty>
+  ./scripts/uninstall.sh --conf <all|zsh|tmux|vim|neovim|ghostty>
       Remove managed symlinks and restore backups.
 
-  ./uninstall.sh all
+  ./scripts/uninstall.sh all
       Uninstall all apps (if `brew` exists) + all configs.
 
-  ./uninstall.sh --conf <all|zsh|tmux|vim|neovim|ghostty>
+  ./scripts/uninstall.sh --conf <all|zsh|tmux|vim|neovim|ghostty>
       Remove managed symlinks and restore backups.
 
-  ./uninstall.sh --apps brew <brew_mode>
+  ./scripts/uninstall.sh --apps brew <brew_mode>
       Uninstall Homebrew formulae/casks listed in `apps/brew_lists.sh`.
 
-  ./uninstall.sh --apps claude
+  ./scripts/uninstall.sh --apps claude
       Uninstall `dippy` and untap `ldayton/dippy`.
 
 Options:
@@ -63,9 +63,9 @@ Options:
   -h, --help  Show this help.
 
 Examples:
-  ./uninstall.sh --conf zsh
-  ./uninstall.sh --apps brew cask
-  ./uninstall.sh --apps claude
+  ./scripts/uninstall.sh --conf zsh
+  ./scripts/uninstall.sh --apps brew cask
+  ./scripts/uninstall.sh --apps claude
 EOF
 }
 
