@@ -27,7 +27,6 @@ BREW_ITEMS=(
 	"cask:thor"
 	"cask:iterm2"
 	"cask:spotify"
-	"cask:devtoys"
 	"cask:ghostty"
 	"cask:obsidian"
 	"cask:claude-code"
