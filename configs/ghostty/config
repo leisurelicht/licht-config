@@ -17,6 +17,7 @@ window-padding-y = 8
 window-save-state = always
 window-theme = auto
 confirm-close-surface = false
+unfocused-split-opacity = 0.85
 
 # 光标
 cursor-style = bar
