@@ -633,7 +633,7 @@ main_loop() {
 				CFG_ZSH=1
 				CFG_TMUX=1
 				CFG_VIM=1
-				CFG_NEOVIM=1
+				CFG_NEOVIM=0
 				CFG_GHOSTTY=1
 				;;
 			1)
@@ -646,7 +646,7 @@ main_loop() {
 				CFG_ZSH=1
 				CFG_TMUX=1
 				CFG_VIM=1
-				CFG_NEOVIM=1
+				CFG_NEOVIM=0
 				CFG_GHOSTTY=1
 				;;
 			esac
