@@ -101,6 +101,18 @@ is_item_installed() {
 	fi
 }
 
+is_cask_deprecated() {
+	local item_name=$1
+	local info_output
+
+	info_output=$(brew info --cask "${item_name}" 2>&1)
+	if echo "${info_output}" | grep -qi "deprecated"; then
+		CASK_DEPRECATED_REASON=$(echo "${info_output}" | grep -i "deprecated" | head -1)
+		return 0
+	fi
+	return 1
+}
+
 install_item() {
 	local item_type=$1
 	local item_name=$2
@@ -136,6 +148,14 @@ for item in "${BREW_ITEMS[@]}"; do
 	if is_item_installed "${BREW_ITEM_TYPE}" "${BREW_ITEM_NAME}"; then
 		log_ok "${BREW_ITEM_NAME} already installed"
 		continue
+	fi
+
+	if [[ "${BREW_ITEM_TYPE}" == "cask" ]]; then
+		if is_cask_deprecated "${BREW_ITEM_NAME}"; then
+			log_warn "${BREW_ITEM_NAME} is deprecated, skipping installation"
+			log_warn "  Reason: ${CASK_DEPRECATED_REASON}"
+			continue
+		fi
 	fi
 
 	if ! ensure_brew_tap "${BREW_ITEM_TAP}"; then
