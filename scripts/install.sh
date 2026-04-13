@@ -739,7 +739,11 @@ if [[ ${neovim} == 1 ]]; then
 	# 安装neovim插件
 	log_info "Install nvim plugins"
 	if has nvim; then
-		run_cmd nvim +Lazy +qa
+		if [[ -f "${HOME}/.config/nvim/init.lua" ]]; then
+			run_cmd nvim +Lazy +qa
+		else
+			log_warn "No init.lua found, skip plugin install."
+		fi
 	else
 		log_warn "nvim not found, skip plugin install."
 	fi
