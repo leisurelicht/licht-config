@@ -1,10 +1,17 @@
 #!/bin/bash
 
-# Format: "<formula|cask>:<name>[:<tap>]"
+# Format: "<type>:<brew-name>[:<tap>]:::<post-install-cmd>"
+# - type: "formula" or "cask"
+# - brew-name: package name for brew install
+# - tap: optional tap source
+# - post-install-cmd: optional shell command(s) to run after installation
+#   Multiple commands separated by ;;
+#
 # Examples:
-# "formula:mycli"
-# "formula:im-select:daipeihust/tap"
-# "cask:foo-bar:some/tap"
+# "formula:mycli"                         # basic install
+# "formula:im-select:daipeihust/tap"      # with custom tap
+# "formula:rtk:::rtk init -g"             # with post-install
+# "formula:rtk:::rtk init -g;;rtk init -g --codex"  # multiple commands
 BREW_ITEMS=(
 	"formula:mycli"
 	"formula:wget"
@@ -21,6 +28,7 @@ BREW_ITEMS=(
 	"formula:bottom"
 	"formula:nmap"
 	"formula:uv"
+	"formula:rtk:::rtk init -g --auto-patch;;rtk init -g --codex"
 	"cask:google-chrome"
 	"cask:itsycal"
 	"cask:browserino:alexstrnik/browserino"

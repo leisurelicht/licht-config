@@ -36,6 +36,14 @@ parse_brew_item() {
 	local item=$1
 	local rest
 
+	# Check for post-install command (separated by :::)
+	if [[ "${item}" == *":::"* ]]; then
+		BREW_ITEM_POST_CMD="${item#*:::}"
+		item="${item%%:::*}"
+	else
+		BREW_ITEM_POST_CMD=""
+	fi
+
 	BREW_ITEM_TYPE=${item%%:*}
 	rest=${item#*:}
 	if [[ "${rest}" == "${item}" ]]; then
@@ -44,7 +52,7 @@ parse_brew_item() {
 
 	BREW_ITEM_NAME=${rest%%:*}
 	if [[ "${rest}" == *:* ]]; then
-		BREW_ITEM_TAP=${rest#*:}
+		BREW_ITEM_TAP="${rest#*:}"
 	else
 		BREW_ITEM_TAP=""
 	fi
@@ -165,6 +173,22 @@ for item in "${BREW_ITEMS[@]}"; do
 	log_step "Installing ${BREW_ITEM_TYPE} ${BREW_ITEM_NAME}"
 	if ! install_item "${BREW_ITEM_TYPE}" "${BREW_ITEM_NAME}"; then
 		log_error "Failed to install ${BREW_ITEM_TYPE} ${BREW_ITEM_NAME}"
+		continue
+	fi
+
+	# Run post-install command if specified
+	if [[ -n "${BREW_ITEM_POST_CMD}" ]]; then
+		# Support multiple commands separated by ;;
+		local cmd
+		while IFS= read -r cmd; do
+			if [[ -z "${cmd}" ]]; then
+				continue
+			fi
+			log_step "Running post-install: ${cmd}"
+			if ! bash -c "${cmd}"; then
+				log_error "Failed to run post-install: ${cmd}"
+			fi
+		done <<< "${BREW_ITEM_POST_CMD//;;/$'\n'}"
 	fi
 done
 
