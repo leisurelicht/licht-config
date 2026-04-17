@@ -144,9 +144,16 @@ ensure_file_symlink() {
 		if [[ -n "${existing_message}" ]]; then
 			log_info "${existing_message}"
 		fi
-		log_step "Backup to [ ${config_path}/backups ] and delete it."
-		if ! run_cmd mv "${target_path}" "${backup_path}"; then
-			fail "Failed to back up [ ${target_path} ] to [ ${backup_path} ]."
+
+		# Check if backup already exists to preserve original backup (idempotency)
+		if [[ ! -e "${backup_path}" && ! -L "${backup_path}" ]]; then
+			log_step "Backup to [ ${config_path}/backups ] and delete it."
+			if ! run_cmd mv "${target_path}" "${backup_path}"; then
+				fail "Failed to back up [ ${target_path} ] to [ ${backup_path} ]."
+			fi
+		else
+			# Backup already exists - fail to avoid overwriting original backup
+			fail "Backup [ ${backup_path} ] already exists. Remove it manually if you want to recreate."
 		fi
 	fi
 
@@ -184,9 +191,15 @@ ensure_dir_symlink() {
 			if [[ -n "${existing_message}" ]]; then
 				log_info "${existing_message}"
 			fi
-			log_step "Backup to [ ${config_path}/backups ] and delete it."
-			if ! run_cmd mv "${target_path}" "${backup_path}"; then
-				fail "Failed to back up [ ${target_path} ] to [ ${backup_path} ]."
+			# Check if backup already exists to preserve original backup (idempotency)
+			if [[ ! -e "${backup_path}" && ! -L "${backup_path}" ]]; then
+				log_step "Backup to [ ${config_path}/backups ] and delete it."
+				if ! run_cmd mv "${target_path}" "${backup_path}"; then
+					fail "Failed to back up [ ${target_path} ] to [ ${backup_path} ]."
+				fi
+			else
+				# Backup already exists - fail to avoid overwriting original backup
+				fail "Backup [ ${backup_path} ] already exists. Remove it manually if you want to recreate."
 			fi
 		fi
 	fi
@@ -212,7 +225,7 @@ upsert_fzf_custom_config() {
 		fail "Missing fzf config source file [ ${source_file} ]."
 	fi
 
-	if [[ ! -f "${backup_file}" ]]; then
+	if [[ ! -f "${backup_file}" && ! -L "${backup_file}" ]]; then
 		if ! run_cmd cp "${target_file}" "${backup_file}"; then
 			fail "Failed to back up [ ${target_file} ]."
 		fi
@@ -237,6 +250,15 @@ upsert_fzf_custom_config() {
 		# End marker exists without start marker: remove only the marker line (least destructive).
 		sed "${end_line}d" "${target_file}" >"${tmp_file}"
 	else
+		# No markers found. Check if content already exists to avoid duplicate append.
+		# Check for multiple unique identifiers from the managed block to reduce false positives.
+		# Both zsh-interactive-cd (directory/plugin name) and the color scheme should be present.
+		if grep -qF "zsh-interactive-cd" "${target_file}" 2>/dev/null &&
+		   grep -qF "color=bg+:#302D41" "${target_file}" 2>/dev/null; then
+			# Content already present (possibly with removed/edited markers), skip append.
+			log_ok "Fzf custom config content already present in [ ${target_file} ], skipping append."
+			return
+		fi
 		cat "${target_file}" >"${tmp_file}"
 	fi
 
@@ -246,7 +268,6 @@ upsert_fzf_custom_config() {
 		cat "${source_file}"
 	} >"${target_file}"
 }
-
 install_on_mac() {
 	if ! has brew; then
 		log_step "[ brew ] is not installed, start to install."
